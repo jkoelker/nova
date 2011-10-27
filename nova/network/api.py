@@ -62,6 +62,12 @@ class API(base.Base):
                         {'method': 'get_vifs_by_instance',
                          'args': {'instance_id': instance_id}})
 
+    def get_vif(self, context, vif_id):
+        return rpc.call(context,
+                        FLAGS.network_topic,
+                        {'method': 'get_vif',
+                         'args': {'vif_id': vif_id}})
+
     def allocate_floating_ip(self, context):
         """Adds a floating ip to a project. (allocates)"""
         # NOTE(vish): We don't know which network host should get the ip
@@ -192,3 +198,18 @@ class API(base.Base):
         return rpc.call(context, FLAGS.network_topic,
                         {'method': 'get_instance_uuids_by_ip_filter',
                          'args': args})
+
+    def add_vif(self, context, instance_id, network_id):
+        """Add a vif to the instance on the network"""
+        return rpc.call(context,
+                        FLAGS.network_topic,
+                        {'method': 'add_virtual_interface',
+                         'args': {'instance_id': instance_id,
+                                  'network_id': network_id}})
+
+    def remove_vif(self, context, vif_uuid):
+        """Remove the vif from the instance, releasing its ips"""
+        return rpc.call(context,
+                        FLAGS.network_topic,
+                        {'method': 'remove_virtual_interface',
+                         'args': {'uuid': vif_uuid}})

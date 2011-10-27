@@ -746,19 +746,30 @@ class NetworkManager(manager.SchedulerDependentManager):
 
     def add_virtual_interface(self, context, instance_id, network_id):
         vif = {'address': self.generate_mac_address(),
-                   'instance_id': instance_id,
-                   'network_id': network_id,
-                   'uuid': str(utils.gen_uuid())}
+               'instance_id': instance_id,
+               'network_id': network_id,
+               'uuid': str(utils.gen_uuid())}
         # try FLAG times to create a vif record with a unique mac_address
         for _ in xrange(FLAGS.create_unique_mac_address_attempts):
             try:
-                return self.db.virtual_interface_create(context, vif)
+                vif = self.db.virtual_interface_create(context, vif)
+                return dict(vif.iteritems())
             except exception.VirtualInterfaceCreateException:
                 vif['address'] = self.generate_mac_address()
         else:
             self.db.virtual_interface_delete_by_instance(context,
                                                              instance_id)
             raise exception.VirtualInterfaceMacAddressException()
+
+    def remove_virtual_interface(self, context, uuid):
+        """Deletes the vif from the instance, releasing its ips"""
+        vif = self.db.virtual_interface_get_by_uuid(context, uuid)
+        instance_id = vif["instance_id"]
+        fixed_ips = self.db.fixed_ip_get_by_instance(context, instance_id)
+        for fixed_ip in fixed_ips:
+            if fixed_ip["virtual_interface_id"] == vif["id"]:
+                self.deallocate_fixed_ip(context, fixed_ip["address"])
+        self.db.virtual_interface_delete(context, vif["id"])
 
     def generate_mac_address(self):
         """Generate an Ethernet MAC address."""
@@ -1080,6 +1091,11 @@ class NetworkManager(manager.SchedulerDependentManager):
         """Returns the vifs associated with an instance"""
         vifs = self.db.virtual_interface_get_by_instance(context, instance_id)
         return [dict(vif.iteritems()) for vif in vifs]
+
+    def get_vif(self, context, vif_id):
+        """Returns the vif"""
+        vif = self.db.virtual_interface_get(context, vif_id)
+        return dict(vif.iteritems())
 
 
 class FlatManager(NetworkManager):
