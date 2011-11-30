@@ -16,28 +16,21 @@
 
 import base64
 import os
-import traceback
 
-from lxml import etree
 from webob import exc
 import webob
 from xml.dom import minidom
 
 from nova.api.openstack import common
 from nova.api.openstack.v2 import ips
-from nova.api.openstack.v2.views import addresses as views_addresses
-from nova.api.openstack.v2.views import flavors as views_flavors
-from nova.api.openstack.v2.views import images as views_images
 from nova.api.openstack.v2.views import servers as views_servers
 from nova.api.openstack import wsgi
 from nova.api.openstack import xmlutil
 from nova import compute
 from nova.compute import instance_types
 from nova import network
-from nova import db
 from nova import exception
 from nova import flags
-from nova import image
 from nova import log as logging
 from nova.rpc import common as rpc_common
 from nova.scheduler import api as scheduler_api

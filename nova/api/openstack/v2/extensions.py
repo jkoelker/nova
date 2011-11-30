@@ -17,18 +17,12 @@
 #    under the License.
 
 import functools
-import imp
-import inspect
-import os
-import sys
 
-from lxml import etree
 import routes
 import webob.dec
 import webob.exc
 
 import nova.api.openstack.v2
-from nova.api.openstack import common
 from nova.api.openstack import wsgi
 from nova.api.openstack import xmlutil
 from nova import exception

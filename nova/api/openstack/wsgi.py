@@ -15,9 +15,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from lxml import etree
 import webob
 from xml.dom import minidom
+from xml.etree import ElementTree
 from xml.parsers import expat
 
 from nova import exception
@@ -421,7 +421,12 @@ class XMLDictSerializer(DictSerializer):
 
     def _to_xml(self, root):
         """Convert the xml object to an xml string."""
-        return etree.tostring(root, encoding='UTF-8', xml_declaration=True)
+        from lxml import etree
+        LOG.debug('*' * 80)
+        LOG.debug(etree.tostring(root, encoding='UTF-8', xml_declaration=True))
+
+        LOG.debug(ElementTree.tostring(root, encoding='UTF-8', method="xml"))
+        return ElementTree.tostring(root, encoding='UTF-8', method="xml")
 
 
 class ResponseHeadersSerializer(ActionDispatcher):
