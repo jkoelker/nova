@@ -82,6 +82,10 @@ class QuantumNovaIPAMLib(object):
                               cidr))
         return network['uuid']
 
+    def get_network_by_uuid(self, context, network_uuid):
+        network = db.network_get_by_uuid(context, network_uuid)
+        return dict(network.iteritems())
+
     def delete_subnets_by_net_id(self, context, net_id, project_id):
         """Deletes a network based on Quantum UUID.  Uses FlatManager
            delete_network to avoid duplication.

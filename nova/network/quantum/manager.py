@@ -257,8 +257,8 @@ class QuantumManager(manager.FlatManager):
 
             # We may not be able to get a network_ref here if this network
             # isn't in the database (i.e. it came from Quantum).
-            network_ref = db.network_get_by_uuid(admin_context,
-                                                 quantum_net_id)
+            network_ref = self.ipam.network_get_by_uuid(admin_context,
+                                                        quantum_net_id)
             if network_ref is None:
                 network_ref = {}
                 network_ref = {"uuid": quantum_net_id,
@@ -390,8 +390,8 @@ class QuantumManager(manager.FlatManager):
 
         return self.db.virtual_interface_create(context, vif)
 
-    def get_instance_nw_info(self, context, instance_id,
-                                instance_type_id, host):
+    def get_instance_nw_info(self, context, instance_id, instance_uuid,
+                             instance_type_id, host, project_id):
         """This method is used by compute to fetch all network data
            that should be used when creating the VM.
 
@@ -405,12 +405,10 @@ class QuantumManager(manager.FlatManager):
            in the future.
         """
         network_info = []
-        instance = db.instance_get(context, instance_id)
-        project_id = instance.project_id
 
         admin_context = context.elevated()
-        vifs = db.virtual_interface_get_by_instance(admin_context,
-                                                    instance_id)
+        vifs = self.db.virtual_interface_get_by_instance(admin_context,
+                                                         instance_id)
         for vif in vifs:
             net = db.network_get(admin_context, vif['network_id'])
             net_id = net['uuid']

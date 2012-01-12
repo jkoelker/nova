@@ -14,9 +14,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import netaddr
 
-from netaddr import IPNetwork, IPAddress
-from nova import db
 from nova import exception
 from nova import flags
 from nova import log as logging
@@ -66,19 +65,6 @@ class QuantumMelangeIPAMLib(object):
                                      gateway=gateway_v6,
                                      dns1=dns1, dns2=dns2)
 
-        net = {"uuid": quantum_net_id,
-               "project_id": project_id,
-               "priority": priority,
-               "label": label}
-        if FLAGS.quantum_use_dhcp:
-            if cidr:
-                n = IPNetwork(cidr)
-                net['dhcp_start'] = IPAddress(n.first + 2)
-        else:
-            net['dhcp_start'] = None
-        admin_context = context.elevated()
-        network = db.network_create_safe(admin_context, net)
-
     def allocate_fixed_ip(self, context, project_id, quantum_net_id, vif_ref):
         """Pass call to allocate fixed IP on to Melange"""
         tenant_id = project_id or FLAGS.quantum_default_tenant_id
@@ -99,27 +85,27 @@ class QuantumMelangeIPAMLib(object):
                 return b['network_id']
         raise exception.NotFound(_("No network found for cidr %s" % cidr))
 
+    def get_network_by_uuid(self, context, network_uuid):
+        return None
+
     def delete_subnets_by_net_id(self, context, net_id, project_id):
         """Find Melange block associated with the Quantum UUID,
            then tell Melange to delete that block.
         """
-        admin_context = context.elevated()
         tenant_id = project_id or FLAGS.quantum_default_tenant_id
         all_blocks = self.m_conn.get_blocks(tenant_id)
         for b in all_blocks['ip_blocks']:
             if b['network_id'] == net_id:
                 self.m_conn.delete_block(b['id'], tenant_id)
 
-        network = db.network_get_by_uuid(admin_context, net_id)
-        db.network_delete_safe(context, network['id'])
+    def _block_to_network(self, ip_block):
+        return ip_block
 
     def get_networks_by_tenant(self, admin_context, tenant_id):
         nets = []
         blocks = self.m_conn.get_blocks(tenant_id)
         for ip_block in blocks['ip_blocks']:
-            network_id = ip_block['network_id']
-            network = db.network_get_by_uuid(admin_context, network_id)
-            nets.append(network)
+            nets.append(self._block_to_network(ip_block))
         return nets
 
     def get_global_networks(self, admin_context):
@@ -127,12 +113,7 @@ class QuantumMelangeIPAMLib(object):
             FLAGS.quantum_default_tenant_id)
 
     def get_project_networks(self, admin_context):
-        try:
-            nets = db.network_get_all(admin_context.elevated())
-        except exception.NoNetworksFound:
-            return []
-        # only return networks with a project_id set
-        return [net for net in nets if net['project_id']]
+        return self.get_networks_by_tenant(admin_context, None)
 
     def get_project_and_global_net_ids(self, context, project_id):
         """Fetches all networks associated with this project, or
@@ -166,8 +147,8 @@ class QuantumMelangeIPAMLib(object):
         tenant_ids = [FLAGS.quantum_default_tenant_id, project_id, None]
         for tid in tenant_ids:
             try:
-                ips = self.m_conn.get_allocated_ips(net_id, vif_id, tid)
-            except Exception, e:
+                self.m_conn.get_allocated_ips(net_id, vif_id, tid)
+            except Exception:
                 continue
             ipam_tenant_id = tid
             break
@@ -222,7 +203,7 @@ class QuantumMelangeIPAMLib(object):
         tenant_id = project_id or FLAGS.quantum_default_tenant_id
         ip_list = self.m_conn.get_allocated_ips(net_id, vif_id, tenant_id)
         return [ip['address'] for ip in ip_list
-                if IPNetwork(ip['address']).version == ip_version]
+                if netaddr.IPNetwork(ip['address']).version == ip_version]
 
     def verify_subnet_exists(self, context, project_id, quantum_net_id):
         """Confirms that a subnet exists that is associated with the

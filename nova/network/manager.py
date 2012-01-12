@@ -711,7 +711,7 @@ class NetworkManager(manager.SchedulerDependentManager):
         self.db.virtual_interface_delete_by_instance(context, instance_id)
 
     def get_instance_nw_info(self, context, instance_id, instance_uuid,
-                             instance_type_id, host):
+                             instance_type_id, host, project_id):
         """Creates network info list for instance.
 
         called by allocate_for_instance and network_api

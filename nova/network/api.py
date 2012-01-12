@@ -191,7 +191,8 @@ class API(base.Base):
         args = {'instance_id': instance['id'],
                 'instance_uuid': instance['uuid'],
                 'instance_type_id': instance['instance_type_id'],
-                'host': instance['host']}
+                'host': instance['host'],
+                'project_id': instance['project_id']}
         try:
             return rpc.call(context, FLAGS.network_topic,
                     {'method': 'get_instance_nw_info',
