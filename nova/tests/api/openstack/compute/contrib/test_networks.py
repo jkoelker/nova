@@ -27,33 +27,59 @@ from nova.tests.api.openstack import fakes
 
 FAKE_NETWORKS = [
     {
-        'bridge': 'br100', 'vpn_public_port': 1000,
-        'dhcp_start': '10.0.0.3', 'bridge_interface': 'eth0',
-        'updated_at': '2011-08-16 09:26:13.048257', 'id': 1,
-        'cidr_v6': None, 'deleted_at': None,
-        'gateway': '10.0.0.1', 'label': 'mynet_0',
+        'bridge': 'br100',
+        'vpn_public_port': 1000,
+        'dhcp_start': '10.0.0.3',
+        'bridge_interface': 'eth0',
+        'updated_at': '2011-08-16 09:26:13.048257',
+        'id': 1,
+        'uuid': 1,
+        'cidr_v6': None,
+        'deleted_at': None,
+        'gateway': '10.0.0.1',
+        'label': 'mynet_0',
         'project_id': '1234',
-        'vpn_private_address': '10.0.0.2', 'deleted': False,
-        'vlan': 100, 'broadcast': '10.0.0.7',
-        'netmask': '255.255.255.248', 'injected': False,
+        'vpn_private_address': '10.0.0.2',
+        'deleted': False,
+        'vlan': 100,
+        'broadcast': '10.0.0.7',
+        'netmask': '255.255.255.248',
+        'injected': False,
         'cidr': '10.0.0.0/29',
-        'vpn_public_address': '127.0.0.1', 'multi_host': False,
-        'dns1': None, 'host': 'nsokolov-desktop',
-        'gateway_v6': None, 'netmask_v6': None,
+        'vpn_public_address': '127.0.0.1',
+        'multi_host': False,
+        'dns1': None,
+        'host': 'nsokolov-desktop',
+        'gateway_v6': None,
+        'netmask_v6': None,
         'created_at': '2011-08-15 06:19:19.387525',
     },
     {
-        'bridge': 'br101', 'vpn_public_port': 1001,
-        'dhcp_start': '10.0.0.11', 'bridge_interface': 'eth0',
-        'updated_at': None, 'id': 2, 'cidr_v6': None,
-        'deleted_at': None, 'gateway': '10.0.0.9',
-        'label': 'mynet_1', 'project_id': None,
-        'vpn_private_address': '10.0.0.10', 'deleted': False,
-        'vlan': 101, 'broadcast': '10.0.0.15',
-        'netmask': '255.255.255.248', 'injected': False,
-        'cidr': '10.0.0.10/29', 'vpn_public_address': None,
-        'multi_host': False, 'dns1': None, 'host': None,
-        'gateway_v6': None, 'netmask_v6': None,
+        'bridge': 'br101',
+        'vpn_public_port': 1001,
+        'dhcp_start': '10.0.0.11',
+        'bridge_interface': 'eth0',
+        'updated_at': None,
+        'id': 2,
+        'uuid': 2,
+        'cidr_v6': None,
+        'deleted_at': None,
+        'gateway': '10.0.0.9',
+        'label': 'mynet_1',
+        'project_id': None,
+        'vpn_private_address': '10.0.0.10',
+        'deleted': False,
+        'vlan': 101,
+        'broadcast': '10.0.0.15',
+        'netmask': '255.255.255.248',
+        'injected': False,
+        'cidr': '10.0.0.10/29',
+        'vpn_public_address': None,
+        'multi_host': False,
+        'dns1': None,
+        'host': None,
+        'gateway_v6': None,
+        'netmask_v6': None,
         'created_at': '2011-08-15 06:19:19.885495',
     },
 ]
@@ -64,26 +90,26 @@ class FakeNetworkAPI(object):
     def __init__(self):
         self.networks = copy.deepcopy(FAKE_NETWORKS)
 
-    def delete(self, context, network_id):
+    def delete(self, context, network_uuid):
         for i, network in enumerate(self.networks):
-            if network['id'] == network_id:
+            if network['uuid'] == network_uuid:
                 del self.networks[0]
                 return True
         raise exception.NetworkNotFound()
 
     #NOTE(bcwaldon): this does nothing other than check for existance
-    def disassociate(self, context, network_id):
+    def disassociate(self, context, network_uuid):
         for i, network in enumerate(self.networks):
-            if network['id'] == network_id:
+            if network['uuid'] == network_uuid:
                 return True
         raise exception.NetworkNotFound()
 
     def get_all(self, context):
         return self.networks
 
-    def get(self, context, network_id):
+    def get(self, context, network_uuid):
         for network in self.networks:
-            if network['id'] == network_id:
+            if network['uuid'] == network_uuid:
                 return network
         raise exception.NetworkNotFound()
 

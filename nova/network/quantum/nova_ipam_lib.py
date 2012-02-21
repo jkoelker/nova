@@ -78,7 +78,7 @@ class QuantumNovaIPAMLib(object):
         net = {"project_id": tenant_id,
                "priority": priority,
                "uuid": quantum_net_id}
-        db.network_update(admin_context, network['id'], net)
+        db.network_update(admin_context, network['uuid'], net)
 
     def delete_subnets_by_net_id(self, context, net_id, project_id):
         """Deletes a network based on Quantum UUID.  Uses FlatManager
@@ -128,7 +128,7 @@ class QuantumNovaIPAMLib(object):
         address = None
         if network['cidr']:
             address = db.fixed_ip_associate_pool(admin_context,
-                                                 network['id'],
+                                                 network['uuid'],
                                                  vif_rec['instance_id'])
             values = {'allocated': True,
                       'virtual_interface_id': vif_rec['id']}
@@ -232,7 +232,7 @@ class QuantumNovaIPAMLib(object):
             # Skip unallocated IPs
             if not ip['allocated'] == 1:
                 continue
-            if ip['network_id'] == network['id']:
+            if ip['network_uuid'] == network['uuid']:
                 vif = db.virtual_interface_get(admin_context,
                     ip['virtual_interface_id'])
                 allocated_ips.append((ip['address'], vif['uuid']))

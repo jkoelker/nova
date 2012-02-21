@@ -1396,12 +1396,12 @@ class API(base.Base):
                                      "args": args})
 
     @wrap_check_policy
-    def add_fixed_ip(self, context, instance, network_id):
+    def add_fixed_ip(self, context, instance, network_uuid):
         """Add fixed_ip from specified network to given instance."""
         self._cast_compute_message('add_fixed_ip_to_instance',
                                    context,
                                    instance,
-                                   params=dict(network_id=network_id))
+                                   params=dict(network_uuid=network_uuid))
 
     @wrap_check_policy
     def remove_fixed_ip(self, context, instance, address):

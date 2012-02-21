@@ -728,6 +728,7 @@ def floating_ip_allocate_address(context, project_id, pool):
 def floating_ip_create(context, values):
     floating_ip_ref = models.FloatingIp()
     floating_ip_ref.update(values)
+    floating_ip_ref['uuid'] = str(utils.gen_uuid())
     floating_ip_ref.save()
     return floating_ip_ref['address']
 
@@ -970,7 +971,7 @@ def dnsdomain_list(context):
 
 
 @require_admin_context
-def fixed_ip_associate(context, address, instance_id, network_id=None,
+def fixed_ip_associate(context, address, instance_id, network_uuid=None,
                        reserved=False):
     """Keyword arguments:
     reserved -- should be a boolean value(True or False), exact value will be
@@ -978,8 +979,8 @@ def fixed_ip_associate(context, address, instance_id, network_id=None,
     """
     session = get_session()
     with session.begin():
-        network_or_none = or_(models.FixedIp.network_id == network_id,
-                              models.FixedIp.network_id == None)
+        network_or_none = or_(models.FixedIp.network_uuid == network_uuid,
+                              models.FixedIp.network_uuid == None)
         fixed_ip_ref = model_query(context, models.FixedIp, session=session,
                                    read_deleted="no").\
                                filter(network_or_none).\
@@ -991,13 +992,13 @@ def fixed_ip_associate(context, address, instance_id, network_id=None,
         #             then this has concurrency issues
         if fixed_ip_ref is None:
             raise exception.FixedIpNotFoundForNetwork(address=address,
-                                            network_id=network_id)
+                                            network_uuid=network_uuid)
         if fixed_ip_ref.instance is not None:
             raise exception.FixedIpAlreadyInUse(address=address)
 
         if not fixed_ip_ref.network:
             fixed_ip_ref.network = network_get(context,
-                                           network_id,
+                                           network_uuid,
                                            session=session)
         fixed_ip_ref.instance = instance_get(context,
                                              instance_id,
@@ -1007,11 +1008,12 @@ def fixed_ip_associate(context, address, instance_id, network_id=None,
 
 
 @require_admin_context
-def fixed_ip_associate_pool(context, network_id, instance_id=None, host=None):
+def fixed_ip_associate_pool(context, network_uuid, instance_id=None,
+                            host=None):
     session = get_session()
     with session.begin():
-        network_or_none = or_(models.FixedIp.network_id == network_id,
-                              models.FixedIp.network_id == None)
+        network_or_none = or_(models.FixedIp.network_uuid == network_uuid,
+                              models.FixedIp.network_uuid == None)
         fixed_ip_ref = model_query(context, models.FixedIp, session=session,
                                    read_deleted="no").\
                                filter(network_or_none).\
@@ -1025,8 +1027,8 @@ def fixed_ip_associate_pool(context, network_id, instance_id=None, host=None):
         if not fixed_ip_ref:
             raise exception.NoMoreFixedIps()
 
-        if fixed_ip_ref['network_id'] is None:
-            fixed_ip_ref['network'] = network_id
+        if fixed_ip_ref['network_uuid'] is None:
+            fixed_ip_ref['network_uuid'] = network_uuid
 
         if instance_id:
             fixed_ip_ref['instance_id'] = instance_id
@@ -1041,6 +1043,7 @@ def fixed_ip_associate_pool(context, network_id, instance_id=None, host=None):
 def fixed_ip_create(context, values):
     fixed_ip_ref = models.FixedIp()
     fixed_ip_ref.update(values)
+    fixed_ip_ref['uuid'] = str(utils.gen_uuid())
     fixed_ip_ref.save()
     return fixed_ip_ref['address']
 
@@ -1152,15 +1155,15 @@ def fixed_ip_get_by_instance(context, instance_id):
 
 
 @require_context
-def fixed_ip_get_by_network_host(context, network_id, host):
+def fixed_ip_get_by_network_host(context, network_uuid, host):
     result = model_query(context, models.FixedIp, read_deleted="no").\
-                 filter_by(network_id=network_id).\
+                 filter_by(network_uuid=network_uuid).\
                  filter_by(host=host).\
                  first()
 
     if not result:
-        raise exception.FixedIpNotFoundForNetworkHost(network_id=network_id,
-                                                      host=host)
+        kwargs = dict(network_uuid=network_uuid, host=host)
+        raise exception.FixedIpNotFoundForNetworkHost(**kwargs)
     return result
 
 
@@ -1281,23 +1284,23 @@ def virtual_interface_get_by_instance(context, instance_id):
 
 @require_context
 def virtual_interface_get_by_instance_and_network(context, instance_id,
-                                                           network_id):
+                                                  network_uuid):
     """Gets virtual interface for instance that's associated with network."""
     vif_ref = _virtual_interface_query(context).\
                       filter_by(instance_id=instance_id).\
-                      filter_by(network_id=network_id).\
+                      filter_by(network_uuuid=network_uuid).\
                       first()
     return vif_ref
 
 
 @require_admin_context
-def virtual_interface_get_by_network(context, network_id):
+def virtual_interface_get_by_network(context, network_uuid):
     """Gets all virtual_interface on network.
 
-    :param network_id: = network to retrieve vifs for
+    :param network_uuid: = network to retrieve vifs for
     """
     vif_refs = _virtual_interface_query(context).\
-                       filter_by(network_id=network_id).\
+                       filter_by(network_uuid=network_uuid).\
                        all()
     return vif_refs
 
@@ -1963,29 +1966,29 @@ def network_count(context):
 
 
 @require_admin_context
-def _network_ips_query(context, network_id):
+def _network_ips_query(context, network_uuid):
     return model_query(context, models.FixedIp, read_deleted="no").\
-                   filter_by(network_id=network_id)
+                   filter_by(network_uuid=network_uuid)
 
 
 @require_admin_context
-def network_count_allocated_ips(context, network_id):
-    return _network_ips_query(context, network_id).\
+def network_count_allocated_ips(context, network_uuid):
+    return _network_ips_query(context, network_uuid).\
                     filter_by(allocated=True).\
                     count()
 
 
 @require_admin_context
-def network_count_available_ips(context, network_id):
-    return _network_ips_query(context, network_id).\
+def network_count_available_ips(context, network_uuid):
+    return _network_ips_query(context, network_uuid).\
                     filter_by(allocated=False).\
                     filter_by(reserved=False).\
                     count()
 
 
 @require_admin_context
-def network_count_reserved_ips(context, network_id):
-    return _network_ips_query(context, network_id).\
+def network_count_reserved_ips(context, network_uuid):
+    return _network_ips_query(context, network_uuid).\
                     filter_by(reserved=True).\
                     count()
 
@@ -1999,7 +2002,8 @@ def network_create_safe(context, values):
             raise exception.DuplicateVlan(vlan=values['vlan'])
 
     network_ref = models.Network()
-    network_ref['uuid'] = str(utils.gen_uuid())
+    if 'uuid' not in values:
+        network_ref['uuid'] = str(utils.gen_uuid())
     network_ref.update(values)
 
     try:
@@ -2010,17 +2014,17 @@ def network_create_safe(context, values):
 
 
 @require_admin_context
-def network_delete_safe(context, network_id):
+def network_delete_safe(context, network_uuid):
     session = get_session()
     with session.begin():
-        network_ref = network_get(context, network_id=network_id,
+        network_ref = network_get(context, network_uuid=network_uuid,
                                   session=session)
         session.delete(network_ref)
 
 
 @require_admin_context
-def network_disassociate(context, network_id):
-    network_update(context, network_id, {'project_id': None,
+def network_disassociate(context, network_uuid):
+    network_update(context, network_uuid, {'project_id': None,
                                          'host': None})
 
 
@@ -2033,14 +2037,14 @@ def network_disassociate_all(context):
 
 
 @require_context
-def network_get(context, network_id, session=None):
+def network_get(context, network_uuid, session=None):
     result = model_query(context, models.Network, session=session,
                          project_only=True).\
-                    filter_by(id=network_id).\
+                    filter_by(uuid=network_uuid).\
                     first()
 
     if not result:
-        raise exception.NetworkNotFound(network_id=network_id)
+        raise exception.NetworkNotFound(network_uuid=network_uuid)
 
     return result
 
@@ -2071,7 +2075,7 @@ def network_get_all_by_uuids(context, network_uuids, project_id=None):
     # returned in the result
     for network in result:
         if network['host'] is None:
-            raise exception.NetworkHostNotSet(network_id=network['id'])
+            raise exception.NetworkHostNotSet(network_uuid=network['uuid'])
 
     #check if the result contains all the networks
     #we are looking for
@@ -2085,7 +2089,7 @@ def network_get_all_by_uuids(context, network_uuids, project_id=None):
             if project_id:
                 raise exception.NetworkNotFoundForProject(
                       network_uuid=network_uuid, project_id=context.project_id)
-            raise exception.NetworkNotFound(network_id=network_uuid)
+            raise exception.NetworkNotFound(network_uuid=network_uuid)
 
     return result
 
@@ -2095,11 +2099,11 @@ def network_get_all_by_uuids(context, network_uuids, project_id=None):
 
 
 @require_admin_context
-def network_get_associated_fixed_ips(context, network_id):
+def network_get_associated_fixed_ips(context, network_uuid):
     # FIXME(sirp): since this returns fixed_ips, this would be better named
     # fixed_ip_get_all_by_network.
     return model_query(context, models.FixedIp, read_deleted="no").\
-                    filter_by(network_id=network_id).\
+                    filter_by(network_uuid=network_uuid).\
                     filter(models.FixedIp.instance_id != None).\
                     filter(models.FixedIp.virtual_interface_id != None).\
                     all()
@@ -2182,16 +2186,16 @@ def network_get_all_by_host(context, host):
 
 
 @require_admin_context
-def network_set_host(context, network_id, host_id):
+def network_set_host(context, network_uuid, host_id):
     session = get_session()
     with session.begin():
         network_ref = _network_get_query(context, session=session).\
-                              filter_by(id=network_id).\
+                              filter_by(id=network_uuid).\
                               with_lockmode('update').\
                               first()
 
         if not network_ref:
-            raise exception.NetworkNotFound(network_id=network_id)
+            raise exception.NetworkNotFound(network_uuid=network_uuid)
 
         # NOTE(vish): if with_lockmode isn't supported, as in sqlite,
         #             then this has concurrency issues
@@ -2203,10 +2207,10 @@ def network_set_host(context, network_id, host_id):
 
 
 @require_context
-def network_update(context, network_id, values):
+def network_update(context, network_uuid, values):
     session = get_session()
     with session.begin():
-        network_ref = network_get(context, network_id, session=session)
+        network_ref = network_get(context, network_uuid, session=session)
         network_ref.update(values)
         network_ref.save(session=session)
         return network_ref
@@ -2605,7 +2609,7 @@ def volume_metadata_update(context, volume_id, metadata, delete):
         try:
             meta_ref = volume_metadata_get_item(context, volume_id,
                                                   meta_key, session)
-        except exception.VolumeMetadataNotFound, e:
+        except exception.VolumeMetadataNotFound:
             meta_ref = models.VolumeMetadata()
             item.update({"key": meta_key, "volume_id": volume_id})
 
@@ -3624,7 +3628,7 @@ def instance_metadata_update(context, instance_id, metadata, delete):
         try:
             meta_ref = instance_metadata_get_item(context, instance_id,
                                                   meta_key, session)
-        except exception.InstanceMetadataNotFound, e:
+        except exception.InstanceMetadataNotFound:
             meta_ref = models.InstanceMetadata()
             item.update({"key": meta_key, "instance_id": instance_id})
 
@@ -3807,7 +3811,7 @@ def instance_type_extra_specs_update_or_create(context, instance_type_id,
         try:
             spec_ref = instance_type_extra_specs_get_item(
                 context, instance_type_id, key, session)
-        except exception.InstanceTypeExtraSpecsNotFound, e:
+        except exception.InstanceTypeExtraSpecsNotFound:
             spec_ref = models.InstanceTypeExtraSpecs()
         spec_ref.update({"key": key, "value": value,
                          "instance_type_id": instance_type_id,
@@ -3835,8 +3839,6 @@ def volume_type_create(context, values):
         except exception.VolumeTypeNotFoundByName:
             pass
         try:
-            specs = values.get('extra_specs')
-
             values['extra_specs'] = _metadata_refs(values.get('extra_specs'),
                                                    models.VolumeTypeExtraSpecs)
             volume_type_ref = models.VolumeTypes()
@@ -3971,7 +3973,7 @@ def volume_type_extra_specs_update_or_create(context, volume_type_id,
         try:
             spec_ref = volume_type_extra_specs_get_item(
                 context, volume_type_id, key, session)
-        except exception.VolumeTypeExtraSpecsNotFound, e:
+        except exception.VolumeTypeExtraSpecsNotFound:
             spec_ref = models.VolumeTypeExtraSpecs()
         spec_ref.update({"key": key, "value": value,
                          "volume_type_id": volume_type_id,
@@ -4155,7 +4157,6 @@ def sm_backend_conf_get(context, sm_backend_id):
 
 @require_admin_context
 def sm_backend_conf_get_by_sr(context, sr_uuid):
-    session = get_session()
     # FIXME(sirp): shouldn't this have a `first()` qualifier attached?
     return model_query(context, models.SMBackendConf, read_deleted="yes").\
                     filter_by(sr_uuid=sr_uuid)

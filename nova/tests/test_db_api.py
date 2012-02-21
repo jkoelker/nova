@@ -36,12 +36,12 @@ def _setup_networking(instance_id, ip='1.2.3.4', flo_addr='1.2.1.2'):
                                            'fake',
                                            associate=True)[0]
     vif = {'address': '56:12:12:12:12:12',
-           'network_id': network_ref['id'],
+           'network_uuid': network_ref['uuid'],
            'instance_id': instance_id}
     vif_ref = db.virtual_interface_create(ctxt, vif)
 
     fixed_ip = {'address': ip,
-                'network_id': network_ref['id'],
+                'network_uuid': network_ref['uuid'],
                 'virtual_interface_id': vif_ref['id'],
                 'allocated': True,
                 'instance_id': instance_id}
@@ -141,10 +141,10 @@ class DbApiTestCase(test.TestCase):
         ctxt = context.get_admin_context()
         values = {'host': 'localhost', 'project_id': 'project1'}
         network = db.network_create_safe(ctxt, values)
-        self.assertNotEqual(None, network.uuid)
-        self.assertEqual(36, len(network.uuid))
-        db_network = db.network_get(ctxt, network.id)
-        self.assertEqual(network.uuid, db_network.uuid)
+        self.assertNotEqual(None, network['uuid'])
+        self.assertEqual(36, len(network['uuid']))
+        db_network = db.network_get(ctxt, network['uuid'])
+        self.assertEqual(network['uuid'], db_network['uuid'])
 
     def test_network_create_with_duplicate_vlan(self):
         ctxt = context.get_admin_context()

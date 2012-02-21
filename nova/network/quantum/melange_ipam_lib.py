@@ -98,8 +98,8 @@ class QuantumMelangeIPAMLib(object):
             if b['network_id'] == net_id:
                 self.m_conn.delete_block(b['id'], tenant_id)
 
-        network = db.network_get_by_uuid(admin_context, net_id)
-        db.network_delete_safe(context, network['id'])
+        network = db.network_get(admin_context, net_id)
+        db.network_delete_safe(context, network['uuid'])
 
     def get_networks_by_tenant(self, admin_context, tenant_id):
         nets = {}
@@ -176,7 +176,7 @@ class QuantumMelangeIPAMLib(object):
         for ip_address in ips:
             block = ip_address['ip_block']
             subnet = {'network_id': block['network_id'],
-                      'id': block['id'],
+                      'uuid': block['id'],
                       'cidr': block['cidr'],
                       'gateway': block['gateway'],
                       'broadcast': block['broadcast'],

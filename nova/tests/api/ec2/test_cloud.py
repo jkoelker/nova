@@ -195,7 +195,7 @@ class CloudTestCase(test.TestCase):
                                                  'instance_type_id': 1})
         networks = db.network_get_all(self.context)
         for network in networks:
-            db.network_update(self.context, network['id'],
+            db.network_update(self.context, network['uuid'],
                               {'host': self.network.host})
         project_id = self.context.project_id
         nw_info = self.network.allocate_for_instance(self.context,

@@ -1342,7 +1342,7 @@ class ComputeManager(manager.SchedulerDependentManager):
     @exception.wrap_exception(notifier=notifier, publisher_id=publisher_id())
     @checks_instance_lock
     @wrap_instance_fault
-    def add_fixed_ip_to_instance(self, context, instance_uuid, network_id):
+    def add_fixed_ip_to_instance(self, context, instance_uuid, network_uuid):
         """Calls network_api to add new fixed_ip to instance
         then injects the new network info and resets instance networking.
 
@@ -1352,7 +1352,7 @@ class ComputeManager(manager.SchedulerDependentManager):
 
         instance_id = instance_ref['id']
         self.network_api.add_fixed_ip_to_instance(context, instance_id,
-                                                  self.host, network_id)
+                                                  self.host, network_uuid)
 
         network_info = self.inject_network_info(context,
                                                 instance_ref['uuid'])

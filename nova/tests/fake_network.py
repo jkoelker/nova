@@ -23,7 +23,6 @@ from nova import utils
 import nova.compute.utils
 from nova.network import manager as network_manager
 from nova.network.quantum import nova_ipam_lib
-from nova.tests import fake_network_cache_model
 
 
 HOST = "testhost"
@@ -77,15 +76,15 @@ class FakeNetworkManager(network_manager.NetworkManager):
     class FakeDB:
         vifs = [{'id': 0,
                  'instance_id': 0,
-                 'network_id': 1,
+                 'network_uuid': 1,
                  'address': 'DC:AD:BE:FF:EF:01'},
                 {'id': 1,
                  'instance_id': 20,
-                 'network_id': 21,
+                 'network_uuid': 21,
                  'address': 'DC:AD:BE:FF:EF:02'},
                 {'id': 2,
                  'instance_id': 30,
-                 'network_id': 31,
+                 'network_uuid': 31,
                  'address': 'DC:AD:BE:FF:EF:03'}]
 
         floating_ips = [dict(address='172.16.1.1',
@@ -115,10 +114,11 @@ class FakeNetworkManager(network_manager.NetworkManager):
         def network_create_safe(self, context, net):
             fakenet = dict(net)
             fakenet['id'] = 999
+            fakenet['uuid'] = 'fake_uuid'
             return fakenet
 
-        def network_get(self, context, network_id):
-            return {'cidr_v6': '2001:db8:69:%x::/64' % network_id}
+        def network_get(self, context, network_uuid):
+            return {'cidr_v6': '2001:db8:69:%x::/64' % network_uuid}
 
         def network_get_all(self, context):
             raise exception.NoNetworksFound()
@@ -126,7 +126,7 @@ class FakeNetworkManager(network_manager.NetworkManager):
         def network_get_all_by_uuids(self, context):
             raise exception.NoNetworksFound()
 
-        def network_disassociate(self, context, network_id):
+        def network_disassociate(self, context, network_uuid):
             return True
 
         def virtual_interface_get_all(self, context):
@@ -150,7 +150,7 @@ class FakeNetworkManager(network_manager.NetworkManager):
     def deallocate_fixed_ip(self, context, address):
         self.deallocate_called = address
 
-    def _create_fixed_ips(self, context, network_id):
+    def _create_fixed_ips(self, context, network_uuid):
         pass
 
 
@@ -188,10 +188,11 @@ def fake_network(network_id, ipv6=None):
 
 def vifs(n):
     for x in xrange(1, n + 1):
+        network_uuid = '00000000-0000-0000-0000-00000000000000%02d' % x
         yield {'id': x,
                'address': 'DE:AD:BE:EF:00:%02x' % x,
                'uuid': '00000000-0000-0000-0000-00000000000000%02d' % x,
-               'network_id': x,
+               'network_uuid': network_uuid,
                'instance_id': 0}
 
 
@@ -214,7 +215,8 @@ def next_fixed_ip(network_id, num_floating_ips=0):
     f_ips = [FakeModel(**next_floating_ip(next_id))
              for i in xrange(num_floating_ips)]
     return {'id': next_id,
-            'network_id': network_id,
+            'network_uuid': ('00000000-0000-0000-0000-00000000000000%02d' %
+                             network_id),
             'address': '192.168.%d.%03d' % (network_id, (next_id + 99)),
             'instance_id': 1,
             'allocated': False,
@@ -286,14 +288,14 @@ def fake_get_instance_nw_info(stubs, num_networks=1, ips_per_vif=2,
         return {'id': 1,
                'address': 'DE:AD:BE:EF:00:01',
                'uuid': uuid,
-               'network_id': 1,
+               'network_uuid': 1,
                'network': None,
                'instance_id': 0}
 
-    def network_get_fake(context, network_id):
-        nets = [n for n in networks if n['id'] == network_id]
+    def network_get_fake(context, network_uuid):
+        nets = [n for n in networks if n['uuid'] == network_uuid]
         if not nets:
-            raise exception.NetworkNotFound(network_id=network_id)
+            raise exception.NetworkNotFound(network_uuid=network_uuid)
         return nets[0]
 
     def update_cache_fake(*args, **kwargs):

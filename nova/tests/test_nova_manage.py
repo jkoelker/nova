@@ -111,9 +111,9 @@ class NetworkCommandsTestCase(test.TestCase):
             self.assertEqual(uuid, self.fake_net['uuid'])
             return db_fakes.FakeModel(self.fake_net)
 
-        def fake_network_update(context, network_id, values):
+        def fake_network_update(context, network_uuid, values):
             self.assertTrue(context.to_dict()['is_admin'])
-            self.assertEqual(network_id, self.fake_net['id'])
+            self.assertEqual(network_uuid, self.fake_net['uuid'])
             self.assertEqual(values, self.fake_update_value)
         self.fake_network_get_by_cidr = fake_network_get_by_cidr
         self.fake_network_get_by_uuid = fake_network_get_by_uuid
@@ -203,9 +203,9 @@ class NetworkCommandsTestCase(test.TestCase):
         self.stubs.Set(db, 'network_get_by_uuid',
                        self.fake_network_get_by_uuid)
 
-        def fake_network_delete_safe(context, network_id):
+        def fake_network_delete_safe(context, network_uuid):
             self.assertTrue(context.to_dict()['is_admin'])
-            self.assertEqual(network_id, self.fake_net['id'])
+            self.assertEqual(network_uuid, self.fake_net['uuid'])
         self.stubs.Set(db, 'network_delete_safe', fake_network_delete_safe)
         self.commands.delete(uuid=self.fake_net['uuid'])
 
@@ -216,9 +216,9 @@ class NetworkCommandsTestCase(test.TestCase):
         self.stubs.Set(db, 'network_get_by_cidr',
                        self.fake_network_get_by_cidr)
 
-        def fake_network_delete_safe(context, network_id):
+        def fake_network_delete_safe(context, network_uuid):
             self.assertTrue(context.to_dict()['is_admin'])
-            self.assertEqual(network_id, self.fake_net['id'])
+            self.assertEqual(network_uuid, self.fake_net['uuid'])
         self.stubs.Set(db, 'network_delete_safe', fake_network_delete_safe)
         self.commands.delete(fixed_range=self.fake_net['cidr'])
 

@@ -61,8 +61,8 @@ class MelangeIpamLibTestCase(test.TestCase):
                                         self._block_list(id='block_id'))
         self.m_conn.delete_block('block_id', 'project_id')
 
-        self.mox.StubOutWithMock(db, 'network_get_by_uuid')
-        db.network_get_by_uuid('elevated', 'network_id').AndReturn(
+        self.mox.StubOutWithMock(db, 'network_get')
+        db.network_get('elevated', 'network_id').AndReturn(
                                                          {'id': 'network_id'})
 
         self.mox.StubOutWithMock(db, 'network_delete_safe')

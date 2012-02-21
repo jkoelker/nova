@@ -64,12 +64,12 @@ class NetworkController(object):
 
         raise exc.HTTPBadRequest(explanation=_("Invalid request body"))
 
-    def _disassociate(self, request, network_id, body):
+    def _disassociate(self, request, network_uuid, body):
         context = request.environ['nova.context']
         authorize(context)
-        LOG.debug(_("Disassociating network with id %s" % network_id))
+        LOG.debug(_("Disassociating network with uuid %s") % network_uuid)
         try:
-            self.network_api.disassociate(context, network_id)
+            self.network_api.disassociate(context, network_uuid)
         except exception.NetworkNotFound:
             raise exc.HTTPNotFound(_("Network not found"))
         return exc.HTTPAccepted()

@@ -640,7 +640,7 @@ def get_dhcp_opts(context, network_ref):
             vifs = db.virtual_interface_get_by_instance(context, instance_id)
             if vifs:
                 #offer a default gateway to the first virtual interface
-                default_gw_network_node[instance_id] = vifs[0]['network_id']
+                default_gw_network_node[instance_id] = vifs[0]['network_uuid']
 
         for fixed_ip_ref in ips_ref:
             instance_id = fixed_ip_ref['instance_id']
@@ -652,9 +652,9 @@ def get_dhcp_opts(context, network_ref):
                 continue
 
             if instance_id in default_gw_network_node:
-                target_network_id = default_gw_network_node[instance_id]
+                target_network_uuid = default_gw_network_node[instance_id]
                 # we don't want default gateway for this fixed ip
-                if target_network_id != fixed_ip_ref['network_id']:
+                if target_network_uuid != fixed_ip_ref['network_uuid']:
                     hosts.append(_host_dhcp_opts(fixed_ip_ref,
                                                  instance_ref))
     return '\n'.join(hosts)
@@ -804,7 +804,7 @@ def _host_lease(fixed_ip_ref, vif_ref, instance_ref):
 
 def _host_dhcp_network(fixed_ip_ref, instance_ref):
     return 'NW-i%08d-%s' % (instance_ref['id'],
-                            fixed_ip_ref['network_id'])
+                            fixed_ip_ref['network_uuid'])
 
 
 def _host_dhcp(fixed_ip_ref, vif_ref, instance_ref):

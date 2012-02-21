@@ -691,8 +691,8 @@ class VirtualInterface(BASE, NovaBase):
     __tablename__ = 'virtual_interfaces'
     id = Column(Integer, primary_key=True)
     address = Column(String(255), unique=True)
-    network_id = Column(Integer, nullable=False)
-    instance_id = Column(Integer, nullable=False)
+    network_uuid = Column(String(36), nullable=False)
+    instance_uuid = Column(String(36), nullable=False)
     uuid = Column(String(36))
 
 
@@ -702,16 +702,18 @@ class FixedIp(BASE, NovaBase):
     __tablename__ = 'fixed_ips'
     id = Column(Integer, primary_key=True)
     address = Column(String(255))
-    network_id = Column(Integer, nullable=True)
-    virtual_interface_id = Column(Integer, nullable=True)
-    instance_id = Column(Integer, nullable=True)
-    # associated means that a fixed_ip has its instance_id column set
-    # allocated means that a fixed_ip has a its virtual_interface_id column set
+    network_uuid = Column(String(36), nullable=True)
+    virtual_interface_uuid = Column(String(36), nullable=True)
+    instance_uuid = Column(String(36), nullable=True)
+    # associated means that a fixed_ip has its instance_uuid column set
+    # allocated means that a fixed_ip has a its virtual_interface_uuid
+    # column set
     allocated = Column(Boolean, default=False)
     # leased means dhcp bridge has leased the ip
     leased = Column(Boolean, default=False)
     reserved = Column(Boolean, default=False)
     host = Column(String(255))
+    uuid = Column(String(36))
 
 
 class FloatingIp(BASE, NovaBase):
@@ -719,12 +721,13 @@ class FloatingIp(BASE, NovaBase):
     __tablename__ = 'floating_ips'
     id = Column(Integer, primary_key=True)
     address = Column(String(255))
-    fixed_ip_id = Column(Integer, nullable=True)
+    fixed_ip_uuid = Column(String(36), nullable=True)
     project_id = Column(String(255))
     host = Column(String(255))  # , ForeignKey('hosts.id'))
     auto_assigned = Column(Boolean, default=False, nullable=False)
     pool = Column(String(255))
     interface = Column(String(255))
+    uuid = Column(String(36))
 
 
 class AuthToken(BASE, NovaBase):

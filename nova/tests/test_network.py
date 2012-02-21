@@ -21,7 +21,6 @@ import sys
 from nova import context
 from nova import db
 from nova import exception
-from nova import flags
 from nova import log as logging
 import nova.policy
 from nova import rpc
@@ -79,14 +78,14 @@ networks = [{'id': 0,
              'vpn_public_address': '192.168.1.2'}]
 
 fixed_ips = [{'id': 0,
-              'network_id': 0,
+              'network_uuid': 0,
               'address': '192.168.0.100',
               'instance_id': 0,
               'allocated': False,
               'virtual_interface_id': 0,
               'floating_ips': []},
              {'id': 0,
-              'network_id': 1,
+              'network_uuid': 1,
               'address': '192.168.1.100',
               'instance_id': 0,
               'allocated': False,
@@ -109,17 +108,17 @@ floating_ip_fields = {'id': 0,
 vifs = [{'id': 0,
          'address': 'DE:AD:BE:EF:00:00',
          'uuid': '00000000-0000-0000-0000-0000000000000000',
-         'network_id': 0,
+         'network_uuid': 0,
          'instance_id': 0},
         {'id': 1,
          'address': 'DE:AD:BE:EF:00:01',
          'uuid': '00000000-0000-0000-0000-0000000000000001',
-         'network_id': 1,
+         'network_uuid': 1,
          'instance_id': 0},
         {'id': 2,
          'address': 'DE:AD:BE:EF:00:02',
          'uuid': '00000000-0000-0000-0000-0000000000000002',
-         'network_id': 2,
+         'network_uuid': 2,
          'instance_id': 0}]
 
 
@@ -148,15 +147,18 @@ class FlatNetworkTestCase(test.TestCase):
 
         for i, (nw, info) in enumerate(nw_info):
             nid = i + 1
+            nw_uuid = '00000000-0000-0000-0000-00000000000000%02d' % nid
             check = {'bridge': 'fake_br%d' % nid,
                      'cidr': '192.168.%s.0/24' % nid,
                      'cidr_v6': '2001:db8:0:%x::/64' % nid,
-                     'id': '00000000-0000-0000-0000-00000000000000%02d' % nid,
+                     'uuid': nw_uuid,
                      'multi_host': False,
                      'injected': False,
                      'bridge_interface': None,
                      'vlan': None}
 
+            print nw
+            print check
             self.assertDictMatch(nw, check)
 
             check = {'broadcast': '192.168.%d.255' % nid,
@@ -218,7 +220,7 @@ class FlatNetworkTestCase(test.TestCase):
         self.assertEqual(1, len(nets))
         network = nets[0]
         self.assertEqual(3, db.network_count_reserved_ips(context_admin,
-                        network['id']))
+                        network['uuid']))
 
     def test_validate_networks_none_requested_networks(self):
         self.network.validate_networks(self.context, None)
@@ -404,10 +406,10 @@ class VlanNetworkTestCase(test.TestCase):
         network['vpn_private_address'] = '192.168.0.2'
         self.network.allocate_fixed_ip(None, 0, network, vpn=True)
 
-    def test_vpn_allocate_fixed_ip_no_network_id(self):
+    def test_vpn_allocate_fixed_ip_no_network_uuid(self):
         network = dict(networks[0])
         network['vpn_private_address'] = '192.168.0.2'
-        network['id'] = None
+        network['uuid'] = None
         context_admin = context.RequestContext('testuser', 'testproject',
                 is_admin=True)
         self.assertRaises(exception.FixedIpNotFoundForNetwork,
@@ -451,8 +453,12 @@ class VlanNetworkTestCase(test.TestCase):
                           cidr='192.168.0.1/24', network_size=100)
 
     def test_validate_networks(self):
-        def network_get(_context, network_id):
-            return networks[network_id]
+        def network_get(_context, network_uuid):
+            nets = [net for net in networks
+                    if net['uuid'] == network_uuid]
+            if nets:
+                return nets[0]
+            raise exception.NetworkNotFound(network_uuid=network_uuid)
 
         self.stubs.Set(db, 'network_get', network_get)
         self.mox.StubOutWithMock(db, 'network_get_all_by_uuids')
@@ -464,7 +470,7 @@ class VlanNetworkTestCase(test.TestCase):
                                 mox.IgnoreArg(),
                                 mox.IgnoreArg()).AndReturn(networks)
 
-        fixed_ips[1]['network_id'] = networks[1]['id']
+        fixed_ips[1]['network_uuid'] = networks[1]['uuid']
         fixed_ips[1]['instance_id'] = None
         db.fixed_ip_get_by_address(mox.IgnoreArg(),
                                     mox.IgnoreArg()).AndReturn(fixed_ips[1])
@@ -620,7 +626,7 @@ class VlanNetworkTestCase(test.TestCase):
             return {'address': '10.0.0.1',
                     'pool': 'nova',
                     'interface': 'eth0',
-                    'network_id': 'blah'}
+                    'network_uuid': 'blah'}
 
         def fake4_network(*args, **kwargs):
             return {'multi_host': False, 'host': 'jibberjabber'}
@@ -630,7 +636,7 @@ class VlanNetworkTestCase(test.TestCase):
             return {'address': '10.0.0.1',
                     'pool': 'nova',
                     'interface': 'eth0',
-                    'network_id': 'blahblah'}
+                    'network_uuid': 'blahblah'}
 
         def fake5_network(*args, **kwargs):
             return {'multi_host': False, 'host': 'testhost'}
@@ -714,7 +720,7 @@ class VlanNetworkTestCase(test.TestCase):
             return {'address': '10.0.0.1',
                     'pool': 'nova',
                     'interface': 'eth0',
-                    'network_id': 'blah'}
+                    'network_uuid': 'blah'}
 
         def fake4_network(*args, **kwargs):
             return {'multi_host': False,
@@ -725,7 +731,7 @@ class VlanNetworkTestCase(test.TestCase):
             return {'address': '10.0.0.1',
                     'pool': 'nova',
                     'interface': 'eth0',
-                    'network_id': 'blahblah'}
+                    'network_uuid': 'blahblah'}
 
         def fake5_network(*args, **kwargs):
             return {'multi_host': False, 'host': 'testhost'}
@@ -794,8 +800,8 @@ class VlanNetworkTestCase(test.TestCase):
         """Makes sure that we cannot deallocaate or disassociate
         a public ip of other project"""
 
-        def network_get(_context, network_id):
-            return networks[network_id]
+        def network_get(_context, network_uuid):
+            return networks[network_uuid]
 
         self.stubs.Set(db, 'network_get', network_get)
 
@@ -849,7 +855,7 @@ class CommonNetworkTestCase(test.TestCase):
         super(CommonNetworkTestCase, self).setUp()
         self.context = context.RequestContext('fake', 'fake')
 
-    def fake_create_fixed_ips(self, context, network_id):
+    def fake_create_fixed_ips(self, context, network_uuid):
         return None
 
     def test_remove_fixed_ip_from_instance(self):
@@ -1298,7 +1304,6 @@ class FloatingIPTestCase(test.TestCase):
         zone = "example.org"
         address1 = "10.10.10.11"
         name1 = "foo"
-        name2 = "bar"
 
         self.network.add_dns_entry(self.context, address1, name1, "A", zone)
 
@@ -1538,7 +1543,6 @@ class LdapDNSTestCase(test.TestCase):
     def test_ldap_dns_create_conflict(self):
         address1 = "10.10.10.11"
         name1 = "foo"
-        name2 = "bar"
 
         self.driver.create_entry(name1, address1, "A", domain1)
 

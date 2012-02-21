@@ -417,24 +417,24 @@ def migration_get_all_unconfirmed(context, confirm_window):
 ####################
 
 
-def fixed_ip_associate(context, address, instance_id, network_id=None,
+def fixed_ip_associate(context, address, instance_id, network_uuid=None,
                        reserved=False):
     """Associate fixed ip to instance.
 
     Raises if fixed ip is not available.
 
     """
-    return IMPL.fixed_ip_associate(context, address, instance_id, network_id,
+    return IMPL.fixed_ip_associate(context, address, instance_id, network_uuid,
                                    reserved)
 
 
-def fixed_ip_associate_pool(context, network_id, instance_id=None, host=None):
+def fixed_ip_associate_pool(context, network_uuid, instance_id=None, host=None):
     """Find free ip in network and associate it to instance or host.
 
     Raises if one is not available.
 
     """
-    return IMPL.fixed_ip_associate_pool(context, network_id,
+    return IMPL.fixed_ip_associate_pool(context, network_uuid,
                                         instance_id, host)
 
 
@@ -478,9 +478,9 @@ def fixed_ip_get_by_instance(context, instance_id):
     return IMPL.fixed_ip_get_by_instance(context, instance_id)
 
 
-def fixed_ip_get_by_network_host(context, network_id, host):
+def fixed_ip_get_by_network_host(context, network_uuid, host):
     """Get fixed ip for a host in a network."""
-    return IMPL.fixed_ip_get_by_network_host(context, network_id, host)
+    return IMPL.fixed_ip_get_by_network_host(context, network_uuid, host)
 
 
 def fixed_ips_by_virtual_interface(context, vif_id):
@@ -531,16 +531,16 @@ def virtual_interface_get_by_instance(context, instance_id):
 
 
 def virtual_interface_get_by_instance_and_network(context, instance_id,
-                                                           network_id):
+                                                  network_uuid):
     """Gets all virtual interfaces for instance."""
     return IMPL.virtual_interface_get_by_instance_and_network(context,
                                                               instance_id,
-                                                              network_id)
+                                                              network_uuid)
 
 
-def virtual_interface_get_by_network(context, network_id):
+def virtual_interface_get_by_network(context, network_uuid):
     """Gets all virtual interfaces on network."""
-    return IMPL.virtual_interface_get_by_network(context, network_id)
+    return IMPL.virtual_interface_get_by_network(context, network_uuid)
 
 
 def virtual_interface_delete(context, vif_id):
@@ -766,19 +766,19 @@ def network_count(context):
     return IMPL.network_count(context)
 
 
-def network_count_allocated_ips(context, network_id):
+def network_count_allocated_ips(context, network_uuid):
     """Return the number of allocated non-reserved ips in the network."""
-    return IMPL.network_count_allocated_ips(context, network_id)
+    return IMPL.network_count_allocated_ips(context, network_uuid)
 
 
-def network_count_available_ips(context, network_id):
+def network_count_available_ips(context, network_uuid):
     """Return the number of available ips in the network."""
-    return IMPL.network_count_available_ips(context, network_id)
+    return IMPL.network_count_available_ips(context, network_uuid)
 
 
-def network_count_reserved_ips(context, network_id):
+def network_count_reserved_ips(context, network_uuid):
     """Return the number of reserved ips in the network."""
-    return IMPL.network_count_reserved_ips(context, network_id)
+    return IMPL.network_count_reserved_ips(context, network_uuid)
 
 
 def network_create_safe(context, values):
@@ -791,23 +791,23 @@ def network_create_safe(context, values):
     return IMPL.network_create_safe(context, values)
 
 
-def network_delete_safe(context, network_id):
-    """Delete network with key network_id.
+def network_delete_safe(context, network_uuid):
+    """Delete network with key network_uuid.
 
     This method assumes that the network is not associated with any project
 
     """
-    return IMPL.network_delete_safe(context, network_id)
+    return IMPL.network_delete_safe(context, network_uuid)
 
 
-def network_create_fixed_ips(context, network_id, num_vpn_clients):
+def network_create_fixed_ips(context, network_uuid, num_vpn_clients):
     """Create the ips for the network, reserving sepecified ips."""
-    return IMPL.network_create_fixed_ips(context, network_id, num_vpn_clients)
+    return IMPL.network_create_fixed_ips(context, network_uuid, num_vpn_clients)
 
 
-def network_disassociate(context, network_id):
+def network_disassociate(context, network_uuid):
     """Disassociate the network from project or raise if it does not exist."""
-    return IMPL.network_disassociate(context, network_id)
+    return IMPL.network_disassociate(context, network_uuid)
 
 
 def network_disassociate_all(context):
@@ -815,9 +815,9 @@ def network_disassociate_all(context):
     return IMPL.network_disassociate_all(context)
 
 
-def network_get(context, network_id):
+def network_get(context, network_uuid):
     """Get an network or raise if it does not exist."""
-    return IMPL.network_get(context, network_id)
+    return IMPL.network_get(context, network_uuid)
 
 
 def network_get_all(context):
@@ -833,9 +833,9 @@ def network_get_all_by_uuids(context, network_uuids, project_id=None):
 # pylint: disable=C0103
 
 
-def network_get_associated_fixed_ips(context, network_id):
+def network_get_associated_fixed_ips(context, network_uuid):
     """Get all network's ips that have been associated."""
-    return IMPL.network_get_associated_fixed_ips(context, network_id)
+    return IMPL.network_get_associated_fixed_ips(context, network_uuid)
 
 
 def network_get_by_bridge(context, bridge):
@@ -868,33 +868,33 @@ def network_get_all_by_host(context, host):
     return IMPL.network_get_all_by_host(context, host)
 
 
-def network_get_index(context, network_id):
+def network_get_index(context, network_uuid):
     """Get non-conflicting index for network."""
-    return IMPL.network_get_index(context, network_id)
+    return IMPL.network_get_index(context, network_uuid)
 
 
-def network_get_vpn_ip(context, network_id):
+def network_get_vpn_ip(context, network_uuid):
     """Get non-conflicting index for network."""
-    return IMPL.network_get_vpn_ip(context, network_id)
+    return IMPL.network_get_vpn_ip(context, network_uuid)
 
 
-def network_set_cidr(context, network_id, cidr):
+def network_set_cidr(context, network_uuid, cidr):
     """Set the Classless Inner Domain Routing for the network."""
-    return IMPL.network_set_cidr(context, network_id, cidr)
+    return IMPL.network_set_cidr(context, network_uuid, cidr)
 
 
-def network_set_host(context, network_id, host_id):
+def network_set_host(context, network_uuid, host_id):
     """Safely set the host for network."""
-    return IMPL.network_set_host(context, network_id, host_id)
+    return IMPL.network_set_host(context, network_uuid, host_id)
 
 
-def network_update(context, network_id, values):
+def network_update(context, network_uuid, values):
     """Set the given properties on an network and update it.
 
     Raises NotFound if network does not exist.
 
     """
-    return IMPL.network_update(context, network_id, values)
+    return IMPL.network_update(context, network_uuid, values)
 
 
 ###################

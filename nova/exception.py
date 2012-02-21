@@ -495,7 +495,7 @@ class NetworkNotCreated(NovaException):
 
 
 class NetworkNotFound(NotFound):
-    message = _("Network %(network_id)s could not be found.")
+    message = _("Network %(network_uuid)s could not be found.")
 
 
 class NetworkNotFoundForBridge(NetworkNotFound):
@@ -524,7 +524,7 @@ class NetworkNotFoundForProject(NotFound):
 
 
 class NetworkHostNotSet(NovaException):
-    message = _("Host is not set to the network (%(network_id)s).")
+    message = _("Host is not set to the network (%(network_uuid)s).")
 
 
 class DatastoreNotFound(NotFound):
@@ -545,7 +545,7 @@ class FixedIpNotFoundForInstance(FixedIpNotFound):
 
 class FixedIpNotFoundForNetworkHost(FixedIpNotFound):
     message = _("Network host %(host)s has zero fixed ips "
-                "in network %(network_id)s.")
+                "in network %(network_uuid)s.")
 
 
 class FixedIpNotFoundForSpecificInstance(FixedIpNotFound):

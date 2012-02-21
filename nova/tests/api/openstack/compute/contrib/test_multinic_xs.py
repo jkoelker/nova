@@ -28,10 +28,10 @@ last_add_fixed_ip = (None, None)
 last_remove_fixed_ip = (None, None)
 
 
-def compute_api_add_fixed_ip(self, context, instance, network_id):
+def compute_api_add_fixed_ip(self, context, instance, network_uuid):
     global last_add_fixed_ip
 
-    last_add_fixed_ip = (instance['uuid'], network_id)
+    last_add_fixed_ip = (instance['uuid'], network_uuid)
 
 
 def compute_api_remove_fixed_ip(self, context, instance, address):
@@ -60,7 +60,7 @@ class FixedIpTest(test.TestCase):
         global last_add_fixed_ip
         last_add_fixed_ip = (None, None)
 
-        body = dict(addFixedIp=dict(networkId='test_net'))
+        body = dict(addFixedIp=dict(networkUuid='test_net'))
         req = webob.Request.blank('/v2/fake/servers/%s/action' % UUID)
         req.method = 'POST'
         req.body = json.dumps(body)

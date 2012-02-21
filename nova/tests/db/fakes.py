@@ -49,6 +49,7 @@ def stub_out(stubs, funcs):
 
 def stub_out_db_network_api(stubs):
     network_fields = {'id': 0,
+                      'uuid': 0,
                       'cidr': '192.168.0.0/24',
                       'netmask': '255.255.255.0',
                       'cidr_v6': 'dead:beef::/64',
@@ -67,7 +68,7 @@ def stub_out_db_network_api(stubs):
                       'vpn_public_address': '192.168.0.2'}
 
     fixed_ip_fields = {'id': 0,
-                       'network_id': 0,
+                       'network_uuid': 0,
                        'network': FakeModel(network_fields),
                        'address': '192.168.0.100',
                        'instance': False,
@@ -90,7 +91,7 @@ def stub_out_db_network_api(stubs):
 
     virtual_interface_fields = {'id': 0,
                                 'address': 'DE:AD:BE:EF:00:00',
-                                'network_id': 0,
+                                'network_uuid': 0,
                                 'instance_id': 0,
                                 'network': FakeModel(network_fields)}
 
@@ -168,9 +169,9 @@ def stub_out_db_network_api(stubs):
         ips[0]['instance'] = True
         ips[0]['instance_id'] = instance_id
 
-    def fake_fixed_ip_associate_pool(context, network_id, instance_id):
-        ips = filter(lambda i: (i['network_id'] == network_id \
-                             or i['network_id'] is None) \
+    def fake_fixed_ip_associate_pool(context, network_uuid, instance_id):
+        ips = filter(lambda i: (i['network_uuid'] == network_uuid \
+                             or i['network_uuid'] is None) \
                             and not i['instance'],
                      fixed_ips)
         if not ips:
@@ -213,7 +214,7 @@ def stub_out_db_network_api(stubs):
         ips = filter(lambda i: i['address'] == address,
                      fixed_ips)
         if ips:
-            nets = filter(lambda n: n['id'] == ips[0]['network_id'],
+            nets = filter(lambda n: n['uuid'] == ips[0]['network_uuid'],
                           networks)
             if nets:
                 return FakeModel(nets[0])
@@ -257,9 +258,9 @@ def stub_out_db_network_api(stubs):
 
     def fake_virtual_interface_get_by_instance_and_network(context,
                                                            instance_id,
-                                                           network_id):
+                                                           network_uuid):
         vif = filter(lambda m: m['instance_id'] == instance_id and \
-                               m['network_id'] == network_id,
+                               m['network_uuid'] == network_uuid,
                      virtual_interfacees)
         if not vif:
             return None
@@ -267,13 +268,13 @@ def stub_out_db_network_api(stubs):
 
     def fake_network_create_safe(context, values):
         net = dict(network_fields)
-        net['id'] = max([n['id'] for n in networks] or [-1]) + 1
+        net['uuid'] = max([n['uuid'] for n in networks] or [-1]) + 1
         for key in values:
             net[key] = values[key]
         return FakeModel(net)
 
-    def fake_network_get(context, network_id):
-        net = filter(lambda n: n['id'] == network_id, networks)
+    def fake_network_get(context, network_uuid):
+        net = filter(lambda n: n['uuid'] == network_uuid, networks)
         if not net:
             return None
         return FakeModel(net[0])
@@ -289,14 +290,14 @@ def stub_out_db_network_api(stubs):
         nets = filter(lambda n: n['instance_id'] == instance_id, networks)
         return [FakeModel(n) for n in nets]
 
-    def fake_network_set_host(context, network_id, host_id):
-        nets = filter(lambda n: n['id'] == network_id, networks)
+    def fake_network_set_host(context, network_uuid, host_id):
+        nets = filter(lambda n: n['uuid'] == network_uuid, networks)
         for net in nets:
             net['host'] = host_id
         return host_id
 
-    def fake_network_update(context, network_id, values):
-        nets = filter(lambda n: n['id'] == network_id, networks)
+    def fake_network_update(context, network_uuid, values):
+        nets = filter(lambda n: n['uuid'] == network_uuid, networks)
         for net in nets:
             for key in values:
                 net[key] = values[key]
@@ -418,7 +419,7 @@ def stub_out_db_instance_api(stubs, injected=True):
 
     fixed_ip_fields = {'address': '10.0.0.3',
                        'address_v6': 'fe80::a00:3',
-                       'network_id': 'fake_flat'}
+                       'network_uuid': 'fake_flat'}
 
     def fake_instance_type_get_all(context, inactive=0, filters=None):
         return INSTANCE_TYPES.values()

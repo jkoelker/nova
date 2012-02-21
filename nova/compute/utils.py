@@ -148,7 +148,7 @@ def legacy_network_info(network_model):
         gateway = get_ip(subnet_v4['gateway'])
         dhcp_server = get_meta(subnet_v4, 'dhcp_server', gateway)
         network_dict = dict(bridge=network['bridge'],
-                            id=network['id'],
+                            uuid=network['id'],
                             cidr=subnet_v4['cidr'],
                             cidr_v6=subnet_v6['cidr'] if subnet_v6 else None,
                             vlan=get_meta(network, 'vlan'),

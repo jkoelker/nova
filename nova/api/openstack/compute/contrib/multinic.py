@@ -48,13 +48,13 @@ class MultinicController(wsgi.Controller):
         authorize(context)
 
         # Validate the input entity
-        if 'networkId' not in body['addFixedIp']:
-            msg = _("Missing 'networkId' argument for addFixedIp")
+        if 'networkUuid' not in body['addFixedIp']:
+            msg = _("Missing 'networkUuid' argument for addFixedIp")
             raise exc.HTTPUnprocessableEntity(explanation=msg)
 
         instance = self._get_instance(context, id)
-        network_id = body['addFixedIp']['networkId']
-        self.compute_api.add_fixed_ip(context, instance, network_id)
+        network_uuid = body['addFixedIp']['networkUuid']
+        self.compute_api.add_fixed_ip(context, instance, network_uuid)
         return webob.Response(status_int=202)
 
     @wsgi.action('removeFixedIp')
@@ -73,7 +73,7 @@ class MultinicController(wsgi.Controller):
 
         try:
             self.compute_api.remove_fixed_ip(context, instance, address)
-        except exceptions.FixedIpNotFoundForSpecificInstance:
+        except exception.FixedIpNotFoundForSpecificInstance:
             LOG.exception(_("Unable to find address %r") % address)
             raise exc.HTTPBadRequest()
 

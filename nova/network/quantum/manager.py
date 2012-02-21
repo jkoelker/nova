@@ -413,7 +413,7 @@ class QuantumManager(manager.FloatingIP, manager.FlatManager):
                         quantum_net_id, interface_id)
 
             hosts = self.get_dhcp_hosts_text(context,
-                subnet['network_id'], project_id)
+                subnet['network_uuid'], project_id)
             self.driver.update_dhcp_hostfile_with_text(interface_id, hosts)
             self.driver.restart_dhcp(context, interface_id, network_ref)
 
@@ -431,7 +431,7 @@ class QuantumManager(manager.FloatingIP, manager.FlatManager):
     def _add_virtual_interface(self, context, instance_id, network_id,
                                net_tenant_id):
         vif = {'instance_id': instance_id,
-               'network_id': network_id,
+               'network_uuid': network_id,
                'uuid': str(utils.gen_uuid())}
 
         # TODO(Vek): Ideally, we would have a VirtualInterface class
@@ -468,13 +468,13 @@ class QuantumManager(manager.FloatingIP, manager.FlatManager):
                                                           context, project_id))
         networks = {}
         for vif in vifs:
-            if vif.get('network_id') is not None:
-                network = db.network_get(context.elevated(), vif['network_id'])
+            if vif.get('network_uuid') is not None:
+                network = db.network_get(context.elevated(),
+                                         vif['network_uuid'])
                 net_tenant_id = net_tenant_dict[network['uuid']]
                 if net_tenant_id is None:
                     net_tenant_id = FLAGS.quantum_default_tenant_id
-                network = {'id': network['id'],
-                           'uuid': network['uuid'],
+                network = {'uuid': network['uuid'],
                            'bridge': '',  # Quantum ignores this field
                            'label': network['label'],
                            'project_id': net_tenant_id}
@@ -504,7 +504,8 @@ class QuantumManager(manager.FloatingIP, manager.FlatManager):
             interface_id = vif_ref['uuid']
             q_tenant_id = project_id
 
-            network_ref = db.network_get(admin_context, vif_ref['network_id'])
+            network_ref = db.network_get(admin_context,
+                                         vif_ref['network_uuid'])
             net_id = network_ref['uuid']
 
             # port deallocate block
@@ -574,7 +575,7 @@ class QuantumManager(manager.FloatingIP, manager.FlatManager):
             dev = self.driver.get_dev(network_ref)
             # And remove the dhcp mappings for the subnet
             hosts = self.get_dhcp_hosts_text(context,
-                subnet['network_id'], project_id)
+                subnet['network_uuid'], project_id)
             self.driver.update_dhcp_hostfile_with_text(dev, hosts)
             # Restart dnsmasq
             self.driver.kill_dhcp(dev)
@@ -590,18 +591,18 @@ class QuantumManager(manager.FloatingIP, manager.FlatManager):
             return
 
         project_id = context.project_id
-        for (net_id, _i) in networks:
+        for (net_uuid, _i) in networks:
             # TODO(bgh): At some point we should figure out whether or
             # not we want the verify_subnet_exists call to be optional.
             if not self.ipam.verify_subnet_exists(context, project_id,
-                                                  net_id):
-                raise exception.NetworkNotFound(network_id=net_id)
-            is_tenant_net = self.q_conn.network_exists(project_id, net_id)
+                                                  net_uuid):
+                raise exception.NetworkNotFound(network_uuid=net_uuid)
+            is_tenant_net = self.q_conn.network_exists(project_id, net_uuid)
             is_provider_net = self.q_conn.network_exists(
                                     FLAGS.quantum_default_tenant_id,
-                                    net_id)
+                                    net_uuid)
             if not (is_tenant_net or is_provider_net):
-                raise exception.NetworkNotFound(network_id=net_id)
+                raise exception.NetworkNotFound(network_uuid=net_uuid)
 
     # NOTE(bgh): deallocate_for_instance will take care of this..  The reason
     # we're providing this is so that NetworkManager::release_fixed_ip() isn't
