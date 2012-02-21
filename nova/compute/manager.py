@@ -1389,8 +1389,7 @@ class ComputeManager(manager.SchedulerDependentManager):
         instance_ref = self.db.instance_get_by_uuid(context, instance_uuid)
         self._notify_about_instance_usage(instance_ref, "create_ip.start")
 
-        instance_id = instance_ref['id']
-        self.network_api.add_fixed_ip_to_instance(context, instance_id,
+        self.network_api.add_fixed_ip_to_instance(context, instance_ref,
                                                   self.host, network_id)
 
         network_info = self.inject_network_info(context,
@@ -1411,8 +1410,7 @@ class ComputeManager(manager.SchedulerDependentManager):
         instance_ref = self.db.instance_get_by_uuid(context, instance_uuid)
         self._notify_about_instance_usage(instance_ref, "delete_ip.start")
 
-        instance_id = instance_ref['id']
-        self.network_api.remove_fixed_ip_from_instance(context, instance_id,
+        self.network_api.remove_fixed_ip_from_instance(context, instance_ref,
                                                        address)
 
         network_info = self.inject_network_info(context,

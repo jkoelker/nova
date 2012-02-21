@@ -2685,18 +2685,18 @@ class ComputeAPITestCase(BaseTestCase):
         self.stubs.Set(self.compute_api.network_api,
                        'get_instance_uuids_by_ip_filter',
                        network_manager.get_instance_uuids_by_ip_filter)
-        self.stubs.Set(network_manager.db,
-                       'instance_get_id_to_uuid_mapping',
-                       db.instance_get_id_to_uuid_mapping)
 
         instance1 = self._create_fake_instance({'display_name': 'woot',
-                                                'id': 0})
+                                                'id': 0,
+                                                'uuid': 'fake_uuid-0'})
         instance2 = self._create_fake_instance({
                 'display_name': 'woo',
-                'id': 20})
+                'id': 20,
+                'uuid': 'fake_uuid-20'})
         instance3 = self._create_fake_instance({
                 'display_name': 'not-woot',
-                'id': 30})
+                'id': 30,
+                'uuid': 'fake_uuid-30'})
 
         # ip ends up matching 2nd octet here.. so all 3 match ip
         # but 'name' only matches one

@@ -199,8 +199,7 @@ class CloudTestCase(test.TestCase):
                               {'host': self.network.host})
         project_id = self.context.project_id
         nw_info = self.network.allocate_for_instance(self.context,
-                                                 instance_id=inst['id'],
-                                                 instance_uuid='',
+                                                 instance_id=inst['uuid'],
                                                  host=inst['host'],
                                                  vpn=None,
                                                  rxtx_factor=3,

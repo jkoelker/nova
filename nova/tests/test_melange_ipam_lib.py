@@ -61,8 +61,8 @@ class MelangeIpamLibTestCase(test.TestCase):
                                         self._block_list(id='block_id'))
         self.m_conn.delete_block('block_id', 'project_id')
 
-        self.mox.StubOutWithMock(db, 'network_get_by_uuid')
-        db.network_get_by_uuid('elevated', 'network_id').AndReturn(
+        self.mox.StubOutWithMock(db, 'network_get')
+        db.network_get('elevated', 'network_id').AndReturn(
                                                          {'id': 'network_id'})
 
         self.mox.StubOutWithMock(db, 'network_delete_safe')
@@ -78,9 +78,9 @@ class MelangeIpamLibTestCase(test.TestCase):
 
         self.m_conn.get_blocks('tenant_id').AndReturn(block_list)
 
-        self.mox.StubOutWithMock(db, 'network_get_by_uuid')
-        db.network_get_by_uuid('admin_context', 'net_1').AndReturn('network1')
-        db.network_get_by_uuid('admin_context', 'net_2').AndReturn('network2')
+        self.mox.StubOutWithMock(db, 'network_get')
+        db.network_get('admin_context', 'net_1').AndReturn('network1')
+        db.network_get('admin_context', 'net_2').AndReturn('network2')
 
         self.mox.ReplayAll()
         values = self.ipam.get_networks_by_tenant('admin_context', 'tenant_id')

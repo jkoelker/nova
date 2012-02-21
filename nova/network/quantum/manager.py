@@ -209,7 +209,7 @@ class QuantumManager(manager.FloatingIP, manager.FlatManager):
         # Initialize forwarding
         self.l3driver.initialize_network(cidr)
 
-        return [{'uuid': quantum_net_id}]
+        return [{'id': quantum_net_id}]
 
     def delete_network(self, context, fixed_range, uuid):
         """Lookup network by uuid, delete both the IPAM
@@ -218,7 +218,7 @@ class QuantumManager(manager.FloatingIP, manager.FlatManager):
            The fixed_range parameter is kept here for interface compatibility
            but is not used.
         """
-        net_ref = db.network_get_by_uuid(context.elevated(), uuid)
+        net_ref = db.network_get(context.elevated(), uuid)
         project_id = net_ref['project_id']
         q_tenant_id = project_id or FLAGS.quantum_default_tenant_id
         net_uuid = net_ref['uuid']
@@ -343,7 +343,6 @@ class QuantumManager(manager.FloatingIP, manager.FlatManager):
                 self.enable_dhcp(context, network['quantum_net_id'], network,
                     vif_rec, network['net_tenant_id'])
         return self.get_instance_nw_info(context, instance_id,
-                                         instance['uuid'],
                                          rxtx_factor, host,
                                          project_id=project_id)
 
@@ -364,8 +363,7 @@ class QuantumManager(manager.FloatingIP, manager.FlatManager):
 
         # We may not be able to get a network_ref here if this network
         # isn't in the database (i.e. it came from Quantum).
-        network_ref = db.network_get_by_uuid(admin_context,
-                                             quantum_net_id)
+        network_ref = db.network_get(admin_context, quantum_net_id)
 
         if network_ref is None:
             network_ref = {}
@@ -459,21 +457,21 @@ class QuantumManager(manager.FloatingIP, manager.FlatManager):
                                net_tenant_id):
         vif = {'instance_id': instance_id,
                'network_id': network_id,
-               'uuid': str(utils.gen_uuid())}
+               'id': str(utils.gen_uuid())}
 
         # TODO(Vek): Ideally, we would have a VirtualInterface class
         #            that would take care of delegating to whoever it
         #            needs to get information from.  We'll look at
         #            this after Trey's refactorings...
         m_ipam = melange_ipam_lib.get_ipam_lib(self)
-        vif['address'] = m_ipam.create_vif(vif['uuid'],
+        vif['address'] = m_ipam.create_vif(vif['id'],
                                            vif['instance_id'],
                                            net_tenant_id)
 
         return self.db.virtual_interface_create(context, vif)
 
-    def get_instance_nw_info(self, context, instance_id, instance_uuid,
-                                            rxtx_factor, host, **kwargs):
+    def get_instance_nw_info(self, context, instance_id, rxtx_factor,
+                             host, **kwargs):
         """This method is used by compute to fetch all network data
            that should be used when creating the VM.
 
@@ -510,7 +508,7 @@ class QuantumManager(manager.FloatingIP, manager.FlatManager):
         # update instance network cache and return network_info
         nw_info = self.build_network_info_model(context, vifs, networks,
                                                 rxtx_factor, host)
-        db.instance_info_cache_update(context, instance_uuid,
+        db.instance_info_cache_update(context, instance_id,
                                       {'network_info': nw_info.as_cache()})
 
         return nw_info
@@ -652,7 +650,7 @@ class QuantumManager(manager.FloatingIP, manager.FlatManager):
         admin_context = context.elevated()
         for ip in ips:
             address, vif_id = ip
-            vif = db.virtual_interface_get_by_uuid(admin_context, vif_id)
+            vif = db.virtual_interface_get(admin_context, vif_id)
             mac_address = vif['address']
             text = "%s,%s.%s,%s\n" % (mac_address, "host-" + address,
                 FLAGS.dhcp_domain, address)
@@ -669,7 +667,7 @@ class QuantumManager(manager.FloatingIP, manager.FlatManager):
         admin_context = context.elevated()
         for ip in ips:
             address, vif_id = ip
-            vif = db.virtual_interface_get_by_uuid(admin_context, vif_id)
+            vif = db.virtual_interface_get(admin_context, vif_id)
             mac_address = vif['address']
             text = ("%s %s %s %s *\n" % (int(time.time()) -
                                          FLAGS.dhcp_lease_time,

@@ -76,8 +76,7 @@ class QuantumNovaIPAMLib(object):
 
         network = networks[0]
         net = {"project_id": tenant_id,
-               "priority": priority,
-               "uuid": quantum_net_id}
+               "priority": priority}
         db.network_update(admin_context, network['id'], net)
 
     def delete_subnets_by_net_id(self, context, net_id, project_id):
@@ -85,7 +84,7 @@ class QuantumNovaIPAMLib(object):
            delete_network to avoid duplication.
         """
         admin_context = context.elevated()
-        network = db.network_get_by_uuid(admin_context, net_id)
+        network = db.network_get(admin_context, net_id)
         if not network:
             raise Exception(_("No network with net_id = %s" % net_id))
         manager.FlatManager.delete_network(self.net_manager,
@@ -124,7 +123,7 @@ class QuantumNovaIPAMLib(object):
                            network_tenant_id, vif_rec):
         """Allocates a single fixed IPv4 address for a virtual interface."""
         admin_context = context.elevated()
-        network = db.network_get_by_uuid(admin_context, quantum_net_id)
+        network = db.network_get(admin_context, quantum_net_id)
         address = None
         if network['cidr']:
             address = db.fixed_ip_associate_pool(admin_context,
@@ -145,7 +144,7 @@ class QuantumNovaIPAMLib(object):
         """Returns information about the IPv4 and IPv6 subnets
            associated with a Quantum Network UUID.
         """
-        n = db.network_get_by_uuid(context.elevated(), net_id)
+        n = db.network_get(context.elevated(), net_id)
         subnet_v4 = {
             'network_id': n['uuid'],
             'cidr': n['cidr'],
@@ -178,7 +177,7 @@ class QuantumNovaIPAMLib(object):
            the specified virtual interface, based on the fixed_ips table.
         """
         # TODO(tr3buchet): link fixed_ips to vif by uuid so only 1 db call
-        vif_rec = db.virtual_interface_get_by_uuid(context, vif_id)
+        vif_rec = db.virtual_interface_get(context, vif_id)
         fixed_ips = db.fixed_ips_by_virtual_interface(context,
                                                       vif_rec['id'])
         return [fixed_ip['address'] for fixed_ip in fixed_ips]
@@ -188,8 +187,8 @@ class QuantumNovaIPAMLib(object):
            associated with the specified virtual interface.
         """
         admin_context = context.elevated()
-        network = db.network_get_by_uuid(admin_context, net_id)
-        vif_rec = db.virtual_interface_get_by_uuid(context, vif_id)
+        network = db.network_get(admin_context, net_id)
+        vif_rec = db.virtual_interface_get(context, vif_id)
         if network['cidr_v6']:
             ip = ipv6.to_global(network['cidr_v6'],
                                 vif_rec['address'],
@@ -203,7 +202,7 @@ class QuantumNovaIPAMLib(object):
            such subnet exists.
         """
         admin_context = context.elevated()
-        net = db.network_get_by_uuid(admin_context, quantum_net_id)
+        net = db.network_get(admin_context, quantum_net_id)
         return net is not None
 
     def deallocate_ips_by_vif(self, context, tenant_id, net_id, vif_ref):
@@ -227,7 +226,7 @@ class QuantumNovaIPAMLib(object):
         ips = db.fixed_ip_get_all(admin_context)
         allocated_ips = []
         # Get all allocated IPs that are part of this subnet
-        network = db.network_get_by_uuid(admin_context, subnet_id)
+        network = db.network_get(admin_context, subnet_id)
         for ip in ips:
             # Skip unallocated IPs
             if not ip['allocated'] == 1:

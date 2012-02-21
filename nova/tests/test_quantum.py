@@ -217,17 +217,16 @@ class QuantumNovaTestCase(test.TestCase):
             bridge_interface=None, dns1=n['dns1'],
             project_id=n['project_id'],
             priority=n['priority'])
-        n['uuid'] = nwks[0]['uuid']
+        n['id'] = nwks[0]['id']
 
 
 class QuantumAllocationTestCase(QuantumNovaTestCase):
     def test_get_network_in_db(self):
         context = self.mox.CreateMockAnything()
         context.elevated().AndReturn('elevated')
-        self.mox.StubOutWithMock(db, 'network_get_by_uuid')
+        self.mox.StubOutWithMock(db, 'network_get')
         self.net_man.context = context
-        db.network_get_by_uuid('elevated', 'quantum_net_id').AndReturn(
-                                                                {'uuid': 1})
+        db.network_get('elevated', 'quantum_net_id').AndReturn({'uuid': 1})
 
         self.mox.ReplayAll()
 
@@ -239,9 +238,9 @@ class QuantumAllocationTestCase(QuantumNovaTestCase):
     def test_get_network_not_in_db(self):
         context = self.mox.CreateMockAnything()
         context.elevated().AndReturn('elevated')
-        self.mox.StubOutWithMock(db, 'network_get_by_uuid')
+        self.mox.StubOutWithMock(db, 'network_get')
         self.net_man.context = context
-        db.network_get_by_uuid('elevated', 'quantum_net_id').AndReturn(None)
+        db.network_get('elevated', 'quantum_net_id').AndReturn(None)
 
         self.mox.ReplayAll()
 
@@ -287,7 +286,7 @@ class QuantumManagerTestCase(QuantumNovaTestCase):
     def _delete_nets(self):
         for n in networks:
             ctx = context.RequestContext('user1', n['project_id'])
-            self.net_man.delete_network(ctx, None, n['uuid'])
+            self.net_man.delete_network(ctx, None, n['id'])
         self.assertRaises(exception.NoNetworksFound,
                           db.network_get_all, ctx.elevated())
 
@@ -356,7 +355,6 @@ class QuantumManagerTestCase(QuantumNovaTestCase):
         self._validate_nw_info(nw_info, expected_labels)
 
         nw_info = self.net_man.get_instance_nw_info(ctx, instance_ref['id'],
-                                instance_ref['uuid'],
                                 instance_ref['instance_type_id'], "",
                                 project_id=project_id)
 
@@ -442,7 +440,7 @@ class QuantumManagerTestCase(QuantumNovaTestCase):
             project_id=project_id,
             priority=9,
             uuid=net_id)
-        net = db.network_get_by_uuid(ctx.elevated(), net_id)
+        net = db.network_get(ctx.elevated(), net_id)
         self.assertTrue(net is not None)
         self.assertEquals(net['uuid'], net_id)
 

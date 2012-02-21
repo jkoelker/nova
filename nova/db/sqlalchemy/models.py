@@ -655,7 +655,7 @@ class Network(BASE, NovaBase):
     __table_args__ = (schema.UniqueConstraint("vpn_public_address",
                                               "vpn_public_port"),
                       {'mysql_engine': 'InnoDB'})
-    id = Column(Integer, primary_key=True)
+    id = Column(String(36), primary_key=True)
     label = Column(String(255))
 
     injected = Column(Boolean, default=False)
@@ -684,30 +684,37 @@ class Network(BASE, NovaBase):
     project_id = Column(String(255))
     priority = Column(Integer)
     host = Column(String(255))  # , ForeignKey('hosts.id'))
-    uuid = Column(String(36))
+
+    @property
+    def uuid(self):
+        return self.id
 
 
 class VirtualInterface(BASE, NovaBase):
     """Represents a virtual interface on an instance."""
     __tablename__ = 'virtual_interfaces'
-    id = Column(Integer, primary_key=True)
+    id = Column(String(36), primary_key=True)
     address = Column(String(255), unique=True)
-    network_id = Column(Integer, nullable=False)
-    instance_id = Column(Integer, nullable=False)
-    uuid = Column(String(36))
+    network_id = Column(String(36), nullable=False)
+    instance_id = Column(String(36), nullable=False)
+
+    @property
+    def uuid(self):
+        return self.id
 
 
 # TODO(vish): can these both come from the same baseclass?
 class FixedIp(BASE, NovaBase):
     """Represents a fixed ip for an instance."""
     __tablename__ = 'fixed_ips'
-    id = Column(Integer, primary_key=True)
+    id = Column(String(36), primary_key=True)
     address = Column(String(255))
-    network_id = Column(Integer, nullable=True)
-    virtual_interface_id = Column(Integer, nullable=True)
-    instance_id = Column(Integer, nullable=True)
+    network_id = Column(String(36), nullable=True)
+    virtual_interface_id = Column(String(36), nullable=True)
+    instance_id = Column(String(36), nullable=True)
     # associated means that a fixed_ip has its instance_id column set
-    # allocated means that a fixed_ip has a its virtual_interface_id column set
+    # allocated means that a fixed_ip has a its virtual_interface_id
+    # column set
     allocated = Column(Boolean, default=False)
     # leased means dhcp bridge has leased the ip
     leased = Column(Boolean, default=False)
@@ -718,9 +725,9 @@ class FixedIp(BASE, NovaBase):
 class FloatingIp(BASE, NovaBase):
     """Represents a floating ip that dynamically forwards to a fixed ip."""
     __tablename__ = 'floating_ips'
-    id = Column(Integer, primary_key=True)
+    id = Column(String(36), primary_key=True)
     address = Column(String(255))
-    fixed_ip_id = Column(Integer, nullable=True)
+    fixed_ip_id = Column(String(36), nullable=True)
     project_id = Column(String(255))
     host = Column(String(255))  # , ForeignKey('hosts.id'))
     auto_assigned = Column(Boolean, default=False, nullable=False)

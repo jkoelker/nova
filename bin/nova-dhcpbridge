@@ -117,9 +117,8 @@ def main():
         LOG.debug(msg)
         globals()[action + '_lease'](mac, ip)
     else:
-        try:
-            network_id = int(os.environ.get('NETWORK_ID'))
-        except TypeError:
+        network_id = os.environ.get('NETWORK_ID')
+        if not network_id:
             LOG.error(_("Environment variable 'NETWORK_ID' must be set."))
             sys.exit(1)
 

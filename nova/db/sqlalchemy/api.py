@@ -728,6 +728,8 @@ def floating_ip_allocate_address(context, project_id, pool):
 @require_context
 def floating_ip_create(context, values):
     floating_ip_ref = models.FloatingIp()
+    if 'id' not in values:
+        values['id'] = str(utils.gen_uuid())
     floating_ip_ref.update(values)
     floating_ip_ref.save()
     return floating_ip_ref['address']
@@ -1027,7 +1029,7 @@ def fixed_ip_associate_pool(context, network_id, instance_id=None, host=None):
             raise exception.NoMoreFixedIps()
 
         if fixed_ip_ref['network_id'] is None:
-            fixed_ip_ref['network'] = network_id
+            fixed_ip_ref['network_id'] = network_id
 
         if instance_id:
             fixed_ip_ref['instance_id'] = instance_id
@@ -1041,6 +1043,8 @@ def fixed_ip_associate_pool(context, network_id, instance_id=None, host=None):
 @require_context
 def fixed_ip_create(context, values):
     fixed_ip_ref = models.FixedIp()
+    if 'id' not in values:
+        values['id'] = str(utils.gen_uuid())
     fixed_ip_ref.update(values)
     fixed_ip_ref.save()
     return fixed_ip_ref['address']
@@ -1052,6 +1056,8 @@ def fixed_ip_bulk_create(context, ips):
     with session.begin():
         for ip in ips:
             model = models.FixedIp()
+            if 'id' not in ip:
+                ip['id'] = str(utils.gen_uuid())
             model.update(ip)
             session.add(model)
 
@@ -1202,6 +1208,8 @@ def virtual_interface_create(context, values):
     """
     try:
         vif_ref = models.VirtualInterface()
+        if 'id' not in values:
+            values['id'] = str(utils.gen_uuid())
         vif_ref.update(values)
         vif_ref.save()
     except IntegrityError:
@@ -1251,18 +1259,6 @@ def virtual_interface_get_by_address(context, address):
     """
     vif_ref = _virtual_interface_query(context).\
                       filter_by(address=address).\
-                      first()
-    return vif_ref
-
-
-@require_context
-def virtual_interface_get_by_uuid(context, vif_uuid):
-    """Gets a virtual interface from the table.
-
-    :param vif_uuid: the uuid of the interface you're looking to get
-    """
-    vif_ref = _virtual_interface_query(context).\
-                      filter_by(uuid=vif_uuid).\
                       first()
     return vif_ref
 
@@ -1457,6 +1453,9 @@ def instance_get_by_uuid(context, uuid, session=None):
 
 @require_context
 def instance_get(context, instance_id, session=None):
+    if isinstance(instance_id, basestring):
+        return instance_get_by_uuid(context, instance_id, session)
+
     result = _build_instance_get(context, session=session).\
                 filter_by(id=instance_id).\
                 first()
@@ -1773,18 +1772,6 @@ def instance_get_actions(context, instance_uuid):
                    all()
 
 
-@require_context
-def instance_get_id_to_uuid_mapping(context, ids):
-    session = get_session()
-    instances = session.query(models.Instance).\
-                        filter(models.Instance.id.in_(ids)).\
-                        all()
-    mapping = {}
-    for instance in instances:
-        mapping[instance['id']] = instance['uuid']
-    return mapping
-
-
 ###################
 
 
@@ -2002,7 +1989,8 @@ def network_create_safe(context, values):
             raise exception.DuplicateVlan(vlan=values['vlan'])
 
     network_ref = models.Network()
-    network_ref['uuid'] = str(utils.gen_uuid())
+    if 'id' not in values:
+        values['id'] = str(utils.gen_uuid())
     network_ref.update(values)
 
     try:
@@ -2120,16 +2108,6 @@ def network_get_by_bridge(context, bridge):
 
     if not result:
         raise exception.NetworkNotFoundForBridge(bridge=bridge)
-
-    return result
-
-
-@require_admin_context
-def network_get_by_uuid(context, uuid):
-    result = _network_get_query(context).filter_by(uuid=uuid).first()
-
-    if not result:
-        raise exception.NetworkNotFoundForUUID(uuid=uuid)
 
     return result
 
