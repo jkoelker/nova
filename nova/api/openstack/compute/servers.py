@@ -562,7 +562,7 @@ class Controller(wsgi.Controller):
                 expl = _('Bad networks format')
                 raise exc.HTTPBadRequest(explanation=expl)
 
-        return networks
+        return networks or None
 
     def _validate_user_data(self, user_data):
         """Check if the user_data is encoded properly."""
@@ -649,12 +649,10 @@ class Controller(wsgi.Controller):
         sg_names = list(set(sg_names))
 
         requested_networks = None
-        if self.ext_mgr.is_loaded('os-networks'):
-            requested_networks = server_dict.get('networks')
-
-        if requested_networks is not None:
+        if (self.ext_mgr.is_loaded('os-networks') or
+            self.ext_mgr.is_loaded('melantum-networks')):
             requested_networks = self._get_requested_networks(
-                requested_networks)
+                server_dict.get('networks', []))
 
         (access_ip_v4, ) = server_dict.get('accessIPv4'),
         if access_ip_v4 is not None:

@@ -53,7 +53,7 @@ class QuotaSetsController(object):
         result = dict(id=str(project_id))
 
         for resource in QUOTAS.resources:
-            result[resource] = quota_set[resource]
+            result[resource] = quota_set.get(resource)
 
         return dict(quota_set=result)
 
