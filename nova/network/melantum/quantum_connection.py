@@ -16,7 +16,7 @@
 #    under the License.
 
 from nova import flags
-from nova.network.quantum import client as quantum_client
+from nova.network.melantum import quantum_client
 from nova.openstack.common import cfg
 from nova.openstack.common import log as logging
 

@@ -781,7 +781,7 @@ class DbQuotaDriverTestCase(test.TestCase):
         # Use our pre-defined resources
         result = self.driver.get_defaults(None, quota.QUOTAS._resources)
 
-        self.assertEqual(result, dict(
+        self.assertDictContains(result, dict(
                 instances=10,
                 cores=20,
                 ram=50 * 1024,
@@ -817,7 +817,7 @@ class DbQuotaDriverTestCase(test.TestCase):
                                               'test_class')
 
         self.assertEqual(self.calls, ['quota_class_get_all_by_name'])
-        self.assertEqual(result, dict(
+        self.assertDictContains(result, dict(
                 instances=5,
                 cores=20,
                 ram=25 * 1024,
@@ -890,7 +890,7 @@ class DbQuotaDriverTestCase(test.TestCase):
                 'quota_usage_get_all_by_project',
                 'quota_class_get_all_by_name',
                 ])
-        self.assertEqual(result, dict(
+        self.assertDictContains(result, dict(
                 instances=dict(
                     limit=5,
                     in_use=2,
@@ -968,7 +968,7 @@ class DbQuotaDriverTestCase(test.TestCase):
                 'quota_get_all_by_project',
                 'quota_usage_get_all_by_project',
                 ])
-        self.assertEqual(result, dict(
+        self.assertDictContains(result, dict(
                 instances=dict(
                     limit=10,
                     in_use=2,
@@ -1047,7 +1047,7 @@ class DbQuotaDriverTestCase(test.TestCase):
                 'quota_usage_get_all_by_project',
                 'quota_class_get_all_by_name',
                 ])
-        self.assertEqual(result, dict(
+        self.assertDictContains(result, dict(
                 instances=dict(
                     limit=5,
                     in_use=2,
@@ -1126,7 +1126,7 @@ class DbQuotaDriverTestCase(test.TestCase):
                 'quota_usage_get_all_by_project',
                 'quota_class_get_all_by_name',
                 ])
-        self.assertEqual(result, dict(
+        self.assertDictContains(result, dict(
                 cores=dict(
                     limit=10,
                     in_use=4,
@@ -1159,7 +1159,7 @@ class DbQuotaDriverTestCase(test.TestCase):
                 'quota_get_all_by_project',
                 'quota_class_get_all_by_name',
                 ])
-        self.assertEqual(result, dict(
+        self.assertDictContains(result, dict(
                 instances=dict(
                     limit=5,
                     ),
@@ -1257,7 +1257,7 @@ class DbQuotaDriverTestCase(test.TestCase):
                 'quota_usage_get_all_by_user',
                 'quota_class_get_all_by_name',
                 ])
-        self.assertEqual(result, dict(
+        self.assertDictContains(result, dict(
                 instances=dict(
                     limit=5,
                     in_use=2,
@@ -1335,7 +1335,7 @@ class DbQuotaDriverTestCase(test.TestCase):
                 'quota_get_all_by_user',
                 'quota_usage_get_all_by_user',
                 ])
-        self.assertEqual(result, dict(
+        self.assertDictContains(result, dict(
                 instances=dict(
                     limit=10,
                     in_use=2,
@@ -1415,7 +1415,7 @@ class DbQuotaDriverTestCase(test.TestCase):
                 'quota_usage_get_all_by_user',
                 'quota_class_get_all_by_name',
                 ])
-        self.assertEqual(result, dict(
+        self.assertDictContains(result, dict(
                 instances=dict(
                     limit=5,
                     in_use=2,
@@ -1495,7 +1495,7 @@ class DbQuotaDriverTestCase(test.TestCase):
                 'quota_usage_get_all_by_user',
                 'quota_class_get_all_by_name',
                 ])
-        self.assertEqual(result, dict(
+        self.assertDictContains(result, dict(
                 cores=dict(
                     limit=10,
                     in_use=4,
@@ -1529,7 +1529,7 @@ class DbQuotaDriverTestCase(test.TestCase):
                 'quota_get_all_by_user',
                 'quota_class_get_all_by_name',
                 ])
-        self.assertEqual(result, dict(
+        self.assertDictContains(result, dict(
                 instances=dict(
                     limit=5,
                     ),
@@ -1625,7 +1625,7 @@ class DbQuotaDriverTestCase(test.TestCase):
                                          True)
 
         self.assertEqual(self.calls, ['get_user_quotas'])
-        self.assertEqual(result, dict(
+        self.assertDictContains(result, dict(
                 instances=10,
                 cores=20,
                 ram=50 * 1024,
@@ -1646,7 +1646,7 @@ class DbQuotaDriverTestCase(test.TestCase):
                                           'security_group_rules'], False)
 
         self.assertEqual(self.calls, ['get_user_quotas'])
-        self.assertEqual(result, dict(
+        self.assertDictContains(result, dict(
                 metadata_items=128,
                 injected_files=5,
                 injected_file_content_bytes=10 * 1024,

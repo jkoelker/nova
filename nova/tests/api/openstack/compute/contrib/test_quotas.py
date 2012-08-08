@@ -97,14 +97,14 @@ class QuotaSetsTest(test.TestCase):
                     'key_pairs': 100,
                     }}
 
-        self.assertEqual(res_dict, expected)
+        self.assertDictContains(res_dict, expected)
 
     def test_quotas_show_as_admin(self):
         req = fakes.HTTPRequest.blank('/v2/fake4/os-quota-sets/1234',
                                       use_admin_context=True)
         res_dict = self.controller.show(req, 1234)
 
-        self.assertEqual(res_dict, quota_set('1234'))
+        self.assertDictContains(res_dict, quota_set('1234'))
 
     def test_quotas_show_as_unauthorized_user(self):
         req = fakes.HTTPRequest.blank('/v2/fake4/os-quota-sets/1234')
@@ -126,7 +126,7 @@ class QuotaSetsTest(test.TestCase):
                                       use_admin_context=True)
         res_dict = self.controller.update(req, 'update_me', body)
 
-        self.assertEqual(res_dict, body)
+        self.assertDictContains(res_dict, body)
 
     def test_quotas_update_as_user(self):
         body = {'quota_set': {'instances': 50, 'cores': 50,
@@ -184,10 +184,11 @@ class QuotaXMLSerializerTest(test.TestCase):
 
         self.assertEqual('quota_set', tree.tag)
         self.assertEqual('project_id', tree.get('id'))
-        self.assertEqual(len(exemplar['quota_set']) - 1, len(tree))
+        self.assertTrue(len(exemplar['quota_set']) - 1 <= len(tree))
         for child in tree:
-            self.assertTrue(child.tag in exemplar['quota_set'])
-            self.assertEqual(int(child.text), exemplar['quota_set'][child.tag])
+            if child.tag in exemplar['quota_set']:
+                self.assertEqual(int(child.text),
+                                 exemplar['quota_set'][child.tag])
 
     def test_deserializer(self):
         exemplar = dict(quota_set=dict(

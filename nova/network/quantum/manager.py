@@ -47,12 +47,6 @@ quantum_opts = [
     cfg.BoolOpt('quantum_use_dhcp',
                 default=False,
                 help='Whether or not to enable DHCP for networks'),
-    cfg.BoolOpt('quantum_use_port_security',
-                default=False,
-                help='Whether or not to enable port security'),
-    cfg.BoolOpt('quantum_port_security_include_link_local',
-                default=False,
-                help='Add the link local address to the port security list'),
     ]
 
 FLAGS = flags.FLAGS

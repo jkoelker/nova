@@ -236,6 +236,14 @@ class TestCase(unittest.TestCase):
                 raise_assertion("d1['%(key)s']=%(d1value)s != "
                                 "d2['%(key)s']=%(d2value)s" % locals())
 
+    def assertDictContains(self, test_dict, expected_dict):
+        for key, value in expected_dict.iteritems():
+            self.assertIn(key, test_dict)
+            if hasattr(value, 'keys'):
+                self.assertDictContains(test_dict[key], value)
+            else:
+                self.assertEqual(value, test_dict[key])
+
     def assertDictListMatch(self, L1, L2, approx_equal=False, tolerance=0.001):
         """Assert a list of dicts are equivalent."""
         def raise_assertion(msg):

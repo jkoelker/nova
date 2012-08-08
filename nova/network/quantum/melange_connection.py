@@ -22,25 +22,11 @@ import urllib
 
 from nova import exception
 from nova import flags
-from nova.openstack.common import cfg
 from nova.openstack.common import jsonutils
 from nova.openstack.common import log as logging
 
 
-melange_opts = [
-    cfg.StrOpt('melange_host',
-               default='127.0.0.1',
-               help='HOST for connecting to melange'),
-    cfg.IntOpt('melange_port',
-               default=9898,
-               help='PORT for connecting to melange'),
-    cfg.IntOpt('melange_num_retries',
-               default=0,
-               help='Number retries when contacting melange'),
-    ]
-
 FLAGS = flags.FLAGS
-FLAGS.register_opts(melange_opts)
 LOG = logging.getLogger(__name__)
 
 json_content_type = {'Content-type': "application/json"}
